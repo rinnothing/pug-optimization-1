@@ -14,7 +14,7 @@ class StateResult(OptimizeResult):
     guesses
     """
 
-    guesses = np.array([])
+    guesses : np.ndarray = np.array([])
 
     def add_guess(self, guess):
         self.guesses = np.append(self.guesses, guess)
