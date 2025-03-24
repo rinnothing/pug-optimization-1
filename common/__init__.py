@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from typing import Protocol
 
 from scipy.optimize import OptimizeResult
 import numpy as np
@@ -21,38 +21,38 @@ class StateResult(OptimizeResult):
 
     # to be continued
 
-class StepCalculator:
+
+class StepCalculator(Protocol):
     """
     Represents abstract algorithm to determine new step size
     """
 
-    @abstractmethod
-    def get_step(self, state: OptimizeResult) -> int:
+    def __call__(self, state: OptimizeResult) -> int:
         pass
 
-class StopDeterminer:
+
+class StopDeterminer(Protocol):
     """
     Represents abstract algorithm to determine need to stop
     """
 
-    @abstractmethod
-    def check_stop(self, state: OptimizeResult) -> bool:
+    def __call__(self, state: OptimizeResult) -> bool:
         pass
 
-class Optimizer:
+
+class Optimizer(Protocol):
     """
     Represents abstract algorithm to optimize the result
     """
 
-    @abstractmethod
-    def optimize(self, fun, x, step: StepCalculator, stop: StopDeterminer) -> StateResult:
+    def __call__(self, fun, x, step: StepCalculator, stop: StopDeterminer) -> StateResult:
         pass
 
-class Visualizer:
+
+class Visualizer(Protocol):
     """
     Represents abstract algorithm to visualize the result
     """
 
-    @abstractmethod
-    def visualize(self, state: StateResult):
+    def __call__(self, state: StateResult):
         pass
