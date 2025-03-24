@@ -1,5 +1,3 @@
-import types
-
 import common
 
 import numpy as np
