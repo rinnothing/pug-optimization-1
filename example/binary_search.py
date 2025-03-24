@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-def binary_search(fun, x=None, step: common.StepCalculator = None, stop: common.StopDeterminer = None,
-                  bounds: list[any] = None,
-                  *args,
-                  **kwargs) -> common.StateResult:
+def binary_search(fun, x=None, step=None, stop=None, bounds=None):
     """
     binary search example, doesn't need x and step, but requires bounds
     """
@@ -49,11 +46,7 @@ def binary_search(fun, x=None, step: common.StepCalculator = None, stop: common.
     return res
 
 
-# make sure function has the needed type
-_: common.Optimizer = binary_search
-
-
-def get_eps_stop_determiner(eps: float) -> common.StopDeterminer:
+def get_eps_stop_determiner(eps: float):
     """
     eps bounds difference stopper, only works for binary search
     :param eps: value, that determines what bounds difference it should stop
@@ -66,7 +59,7 @@ def get_eps_stop_determiner(eps: float) -> common.StopDeterminer:
     return determiner
 
 
-def binary_visualiser(state: common.StateResult, limits, freq = 50, path: str = None):
+def binary_visualiser(state: common.StateResult, limits, freq=50, path: str = None):
     fig, ax = plt.subplots()
 
     # setting limits
@@ -106,9 +99,6 @@ def binary_visualiser(state: common.StateResult, limits, freq = 50, path: str = 
 
     plt.show()
 
-
-# make sure function has the needed type
-_: common.Visualizer = binary_visualiser
 
 # example on usage of created functions
 lim = [6.0, 8.0]
