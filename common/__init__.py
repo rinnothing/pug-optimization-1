@@ -1,7 +1,10 @@
 from typing import Protocol
 
 from scipy.optimize import OptimizeResult
-import numpy as np
+
+
+def zero(x):
+    return 0
 
 
 class StateResult(OptimizeResult):
@@ -11,13 +14,18 @@ class StateResult(OptimizeResult):
 
     Attributes
     ----------
-    guesses
+    guesses vals you guessed on every step
+    history some information on bounds and other stuff you need after run
+    function is a function on which it did optimizations
     """
-
-    guesses : np.ndarray = np.array([])
+    guesses: list = []
+    history: list = []
 
     def add_guess(self, guess):
-        self.guesses = np.append(self.guesses, guess)
+        self.guesses.append(guess)
+
+    def add_history(self, val):
+        self.history.append(val)
 
     # to be continued
 
@@ -45,14 +53,15 @@ class Optimizer(Protocol):
     Represents abstract algorithm to optimize the result
     """
 
-    def __call__(self, fun, x, step: StepCalculator, stop: StopDeterminer) -> StateResult:
+    def __call__(self, fun, x, step: StepCalculator, stop: StopDeterminer, *args, **kwargs) -> StateResult:
         pass
 
 
 class Visualizer(Protocol):
     """
-    Represents abstract algorithm to visualize the result
+    Represents abstract algorithm to visualize the result.
+    When path is specified, should put the result there.
     """
 
-    def __call__(self, state: StateResult):
+    def __call__(self, state: StateResult, limits, freq, path: str = None):
         pass
