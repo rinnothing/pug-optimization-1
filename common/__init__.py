@@ -18,6 +18,7 @@ class StateResult(OptimizeResult):
     history some information on bounds and other stuff you need after run
     function is a function on which it did optimizations
     """
+    success: bool = False
     guesses: list = []
     history: list = []
 
@@ -26,5 +27,11 @@ class StateResult(OptimizeResult):
 
     def add_history(self, val):
         self.history.append(val)
+
+    def get_res(self):
+        if not self.success or len(self.guesses) == 0:
+            return None
+
+        return self.guesses[-1]
 
     # to be continued
