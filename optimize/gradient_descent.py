@@ -1,3 +1,5 @@
+import matplotlib.patches
+
 import common
 
 import numpy as np
@@ -90,7 +92,7 @@ def get_constant_step(h_constant):
     :return: scheduler with given hyperparameters
     """
 
-    def step(fun, grad_val):
+    def step(fun, grad_val, state):
         return h_constant
 
     return step
@@ -174,3 +176,85 @@ def get_inv_root_step(h0):
         return h0 / np.sqrt(k + 1)
 
     return step
+
+
+# absolute stoppers
+def get_stop_x_eps(eps):
+    def stop(state: common.StateResult):
+        if len(state.history) < 2:
+            return False
+
+        return np.linalg.norm(state.history[-1] - state.history[-2]) < eps
+
+    return stop
+
+
+def get_stop_f_eps(eps):
+    def stop(state: common.StateResult):
+        if len(state.history) < 2:
+            return False
+
+        last_f = state.function(state.history[-1])
+        prev_f = state.function(state.history[-2])
+
+        return np.linalg.norm(last_f - prev_f) < eps
+
+    return stop
+
+
+# visualiser
+
+def gradient_visualiser(state: common.StateResult, limits, freq=50, l = 1, path: str = None, display=True):
+    fig, ax = plt.subplots()
+
+    # setting limits
+    ax.set_xlim(limits)
+
+    t = np.arange(limits[0], limits[1], (limits[1] - limits[0]) / freq)
+
+    # drawing the base graphic
+    ax.plot(t, state.function(t))
+
+    # adding moving objects
+    point, = ax.plot(0, 0, 'ro')
+    arrow = matplotlib.patches.Arrow(0, 0, 0, 0, width=2)
+    ax.add_patch(arrow)
+
+    # making animation function
+    def animate(i):
+        point_xy = (state.guesses[i], state.function(state.guesses[i]))
+        point.set_data([[i] for i in point_xy])
+
+        der, h = state.history[-1]
+        arrow.set_data(point_xy[0], point_xy[1], -der * h * l, -der * der * h * l)
+
+        return point, arrow
+
+    ani = animation.FuncAnimation(
+        fig,
+        animate,
+        frames=len(state.history),
+        repeat=True,
+        interval=100
+    )
+
+    if path is not None:
+        writer = animation.PillowWriter(fps=15, bitrate=1800)
+        ani.save(path, writer=writer)
+
+    if display:
+        plt.show()
+
+
+# maybe will add other later
+
+# example
+# f = lambda x: (x ** 4) - 5 * (x ** 2) + 2 * x + 5
+# gr = lambda fun, x: 4 * x ** 3 - 10 * x + 2
+f = lambda x: x ** 4 / 100 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
+gr = lambda fun, x: x ** 3 / 25 - x ** 2 * 3 / 10 - x + 2
+result = gradient_descent(f, gr, get_constant_step(0.01), get_stop_x_eps(0.2), -12)
+if not result.success:
+    print("I'm sorry, no solution")
+else:
+    gradient_visualiser(result, [-12, 15], freq = 200, l = 50)

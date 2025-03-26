@@ -105,4 +105,5 @@ lim = [6.0, 8.0]
 result = binary_search(lambda x: (x - 5.0) ** 2.0 - 5.0, stop=get_eps_stop_determiner(0.1), bounds=lim)
 if not result.success:
     print("didn't solve")
-binary_visualiser(result, lim, 200)
+else:
+    binary_visualiser(result, lim, 200)

@@ -18,9 +18,13 @@ class StateResult(OptimizeResult):
     history some information on bounds and other stuff you need after run
     function is a function on which it did optimizations
     """
-    success: bool = False
-    guesses: list = []
-    history: list = []
+
+    def __init__(self):
+        super().__init__()
+
+        self.success: bool = False
+        self.guesses: list = []
+        self.history: list = []
 
     def add_guess(self, guess):
         self.guesses.append(guess)
@@ -35,3 +39,25 @@ class StateResult(OptimizeResult):
         return self.guesses[-1]
 
     # to be continued
+
+
+def get_times_stopper(stopper, times):
+    """
+    gives given stopper a run times restriction
+    :param stopper: stopper function
+    :param times: max number of times it should be run
+    :return: stopper with applied restrictions
+    """
+    k = 0
+
+    def times_stopper(state):
+        nonlocal k
+
+        if k >= times:
+            return False
+
+        k += 1
+
+        return stopper(state)
+
+    return times_stopper
