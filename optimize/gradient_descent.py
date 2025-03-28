@@ -98,7 +98,7 @@ def get_constant_step(h_constant):
     return step
 
 
-def get_partial_stuck_step(eps, h0, divisor=2):
+def get_partial_stuck_step(eps, h0, divisor=2.0):
     """
     starts with h0 and when finds itself stuck divides step by divisor
     :param eps: distance between "stuck" values
@@ -191,11 +191,11 @@ def get_stop_x_eps(eps):
 
 def get_stop_f_eps(eps):
     def stop(state: common.StateResult):
-        if len(state.history) < 2:
+        if len(state.guesses) < 2:
             return False
 
-        last_f = state.function(state.history[-1])
-        prev_f = state.function(state.history[-2])
+        last_f = state.function(state.guesses[-1])
+        prev_f = state.function(state.guesses[-2])
 
         return np.linalg.norm(last_f - prev_f) < eps
 
@@ -204,11 +204,13 @@ def get_stop_f_eps(eps):
 
 # visualiser
 
-def gradient_visualiser(state: common.StateResult, limits, freq=50, l = 1, path: str = None, display=True):
+def gradient_visualiser(state: common.StateResult, limits, freq=50, l=1, interval=100, y_limits = None, path: str = None, display=True):
     fig, ax = plt.subplots()
 
     # setting limits
     ax.set_xlim(limits)
+    if y_limits is not None:
+        ax.set_ylim(y_limits)
 
     t = np.arange(limits[0], limits[1], (limits[1] - limits[0]) / freq)
 
@@ -217,16 +219,18 @@ def gradient_visualiser(state: common.StateResult, limits, freq=50, l = 1, path:
 
     # adding moving objects
     point, = ax.plot(0, 0, 'ro')
-    arrow = matplotlib.patches.Arrow(0, 0, 0, 0, width=2)
-    ax.add_patch(arrow)
+    arrow = ax.arrow(0, 0, 0, 0, )
 
     # making animation function
     def animate(i):
+        nonlocal arrow
+        arrow.remove()
+
         point_xy = (state.guesses[i], state.function(state.guesses[i]))
         point.set_data([[i] for i in point_xy])
 
-        der, h = state.history[-1]
-        arrow.set_data(point_xy[0], point_xy[1], -der * h * l, -der * der * h * l)
+        der, h = state.history[i]
+        arrow = ax.arrow(point_xy[0], point_xy[1], -der * h * l, -der * der * h * l)
 
         return point, arrow
 
@@ -235,7 +239,7 @@ def gradient_visualiser(state: common.StateResult, limits, freq=50, l = 1, path:
         animate,
         frames=len(state.history),
         repeat=True,
-        interval=100
+        interval=interval
     )
 
     if path is not None:
@@ -251,10 +255,10 @@ def gradient_visualiser(state: common.StateResult, limits, freq=50, l = 1, path:
 # example
 # f = lambda x: (x ** 4) - 5 * (x ** 2) + 2 * x + 5
 # gr = lambda fun, x: 4 * x ** 3 - 10 * x + 2
-f = lambda x: x ** 4 / 100 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
-gr = lambda fun, x: x ** 3 / 25 - x ** 2 * 3 / 10 - x + 2
-result = gradient_descent(f, gr, get_constant_step(0.01), get_stop_x_eps(0.2), -12)
+f = lambda x: x ** 4 / 100.0 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
+gr = lambda fun, x: x ** 3 / 25.0 - x ** 2 * 3.0 / 10.0 - x + 2.0
+result = gradient_descent(f, symmetric_derivative, get_inv_root_step(1), get_stop_f_eps(0.01), 3)
 if not result.success:
     print("I'm sorry, no solution")
 else:
-    gradient_visualiser(result, [-12, 15], freq = 200, l = 50)
+    gradient_visualiser(result, [-12, 15], y_limits=[-40, 100], freq=200, l=5, interval=500)
