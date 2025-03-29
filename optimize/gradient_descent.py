@@ -1,5 +1,3 @@
-import matplotlib.patches
-
 import common
 
 import numpy as np
@@ -33,11 +31,11 @@ def gradient_descent(fun, grad, step, stop, x):
         h = step(fun, grad_val, state=res)
 
         # doing a step
-        x -= grad_val * h
+        x = x - grad_val * h
         res.add_guess(x)
 
         # storing context information
-        res.add_history(np.array([grad_val, h]))
+        res.add_history([grad_val, h])
 
     res.success = True
     return res
@@ -252,13 +250,14 @@ def gradient_visualiser(state: common.StateResult, limits, freq=50, l=1, interva
 
 # maybe will add other later
 
-# example
-# f = lambda x: (x ** 4) - 5 * (x ** 2) + 2 * x + 5
-# gr = lambda fun, x: 4 * x ** 3 - 10 * x + 2
-f = lambda x: x ** 4 / 100.0 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
-gr = lambda fun, x: x ** 3 / 25.0 - x ** 2 * 3.0 / 10.0 - x + 2.0
-result = gradient_descent(f, symmetric_derivative, get_inv_root_step(1), get_stop_f_eps(0.01), 3)
-if not result.success:
-    print("I'm sorry, no solution")
-else:
-    gradient_visualiser(result, [-12, 15], y_limits=[-40, 100], freq=200, l=5, interval=500)
+if __name__ == "__main__":
+    # example
+    # f = lambda x: (x ** 4) - 5 * (x ** 2) + 2 * x + 5
+    # gr = lambda fun, x: 4 * x ** 3 - 10 * x + 2
+    f = lambda x: x ** 4 / 100.0 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
+    gr = lambda fun, x: x ** 3 / 25.0 - x ** 2 * 3.0 / 10.0 - x + 2.0
+    result = gradient_descent(f, symmetric_derivative, get_inv_root_step(1), get_stop_f_eps(0.01), 3)
+    if not result.success:
+        print("I'm sorry, no solution")
+    else:
+        gradient_visualiser(result, [-12, 15], y_limits=[-40, 100], freq=200, l=5, interval=500)
