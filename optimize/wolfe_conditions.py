@@ -101,28 +101,28 @@ def visualiser_1(state: common.StateResult, limits, x, c1, c2, y, y_g, freq=50, 
 
     plt.show()
 
+if __name__ == "__main__":
+    lim = [-13, 10]
+    f = lambda x: x ** 4 / 100 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
+    gr = lambda x: x ** 3 / 25 - x ** 2 * 3 / 10 - x + 2
 
-lim = [-13, 10]
-f = lambda x: x ** 4 / 100 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
-gr = lambda x: x ** 3 / 25 - x ** 2 * 3 / 10 - x + 2
+    f2 = lambda x: 1/(x[0]**2+x[1]**2+0.1) +x[0]**2+x[1]**2 + x[1]/10
+    def gr2(x):
+        df_dx0 = 2 * x[0] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2)
+        df_dx1 = 2 * x[1] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2) + 1/10
+        return np.array([df_dx0, df_dx1])
 
-f2 = lambda x: 1/(x[0]**2+x[1]**2+0.1) +x[0]**2+x[1]**2 + x[1]/10
-def gr2(x):
-    df_dx0 = 2 * x[0] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2)
-    df_dx1 = 2 * x[1] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2) + 1/10
-    return np.array([df_dx0, df_dx1])
+    f5 = lambda x, y: x ** 2 + y ** 2
+    x2 = np.array([-1.5, 1.8])
+    step2 = np.array([0.1, -0.5])
+    c1 = 0.8
+    c2 = 1e-3
+    lim_x = [-3, 3]
+    lim_y = [-3, 3]
+    res2 = wolfe_conditions(f2, gr2, step2, x2, 20, c1, c2)
+    visualiser(res2, x2, lim_x, lim_y)
 
-f5 = lambda x, y: x ** 2 + y ** 2
-x2 = np.array([-1.5, 1.8])
-step2 = np.array([0.1, -0.5])
-c1 = 0.8
-c2 = 1e-3
-lim_x = [-3, 3]
-lim_y = [-3, 3]
-res2 = wolfe_conditions(f2, gr2, step2, x2, 20, c1, c2)
-visualiser(res2, x2, lim_x, lim_y)
-
-x1 = np.array(-10)
-step1 = np.array(4)
-res1 = wolfe_conditions(f, gr, step1, x1, 20, c1, c2)
-visualiser_1(res1, lim, x1, c1, c2, f(x1), gr(x1))
+    x1 = np.array(-10)
+    step1 = np.array(4)
+    res1 = wolfe_conditions(f, gr, step1, x1, 20, c1, c2)
+    visualiser_1(res1, lim, x1, c1, c2, f(x1), gr(x1))

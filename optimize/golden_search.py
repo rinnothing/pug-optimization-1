@@ -109,8 +109,9 @@ def visualiser(state: common.StateResult, limits, freq=50, path: str = None):
 
 
 # example on usage of created functions
-lim = [-5, 8.0]
-result = golden_search(lambda x: (x + 2) ** 2.0 - 5.0, stop=get_eps_stop_determiner(0.1), bounds=lim)
-if not result.success:
-    print("didn't solve")
-visualiser(result, lim, 200)
+if __name__ == "__main__":
+    lim = [-5, 8.0]
+    result = golden_search(lambda x: (x + 2) ** 2.0 - 5.0, stop=get_eps_stop_determiner(0.1), bounds=lim)
+    if not result.success:
+        print("didn't solve")
+    visualiser(result, lim, 200)
