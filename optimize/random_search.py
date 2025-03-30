@@ -1,56 +1,56 @@
-import common
+import random
 import common.tests_function
+
+import common
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-def golden_search(fun, max_count_step=1000000, stop=None, bounds=None):
+def random_search(fun, max_count_step=1000000, stop=None, bounds=None):
     res = common.StateResult()
     # putting fun
     res.function = fun
 
-    # need to have bounds for binary search
+    # need to have bounds for random search
     if bounds is None:
         return res
 
     # init bounds
     s, f = bounds
-    # init Golden ratio
-    gold = (np.sqrt(5) + 1) / 2
 
-    # create left and right points
-    l = f - (f - s) / gold
-    r = s + (f - s) / gold
-    fun_l = fun(l)
-    res.add_function_call()
-    fun_r = fun(r)
+    # create lasp point
+    last_point = random.uniform(s, f)
+    fun_last = fun(last_point)
     res.add_function_call()
 
     # you can put values you need to explain previous steps in history
     res.add_history(np.array([s, f]))
 
-    # doing golden search
+    # doing random search
     while not stop(res) and max_count_step:
-        max_count_step -= 1
-        if fun_l < fun_r:
-            f = r
-            my_choose = r
-            r = l
-            fun_r = fun_l
-            l = f - (f - s) / gold
-            fun_l = fun(l)
-            res.add_function_call()
+        new_point = random.uniform(s, f)
+        fun_new = fun(new_point)
+        res.add_function_call()
+        if fun_new == fun_last:
+            res.add_guess(res.guesses[-1])
+            res.add_history(res.history[-1])
+            continue
+        if fun_new < fun_last:
+            if new_point < last_point:
+                f = last_point
+            else:
+                s = last_point
+            last_point = new_point
+            fun_last = fun_new
+            my_choose = new_point
         else:
-            s = l
-            my_choose = l
-            l = r
-            fun_l = fun_r
-            r = s + (f - s) / gold
-            fun_r = fun(r)
-            res.add_function_call()
-
+            if new_point < last_point:
+                s = new_point
+            else:
+                f = new_point
+            my_choose = last_point
         res.add_guess(my_choose)
         res.add_history(np.array([s, f]))
 
@@ -117,15 +117,16 @@ def visualiser(state: common.StateResult, limits, freq=50, path: str = None):
 if __name__ == "__main__":
     for test_func in common.tests_function.functions_with_one_min:
         lim = test_func.lim
-        result = golden_search(test_func.function, stop=get_eps_stop_determiner(0.1), bounds=lim)
+        result = random_search(test_func.function, stop=get_eps_stop_determiner(0.1), bounds=lim)
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
         visualiser(result, lim, 200)
+
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
-        result = golden_search(test_func.function, stop=get_eps_stop_determiner(0.1), bounds=lim)
+        result = random_search(test_func.function, stop=get_eps_stop_determiner(0.1), bounds=lim)
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")

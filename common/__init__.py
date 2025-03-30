@@ -17,6 +17,8 @@ class StateResult(OptimizeResult):
     guesses vals you guessed on every step
     history some information on bounds and other stuff you need after run
     function is a function on which it did optimizations
+    count_of_function_calls is count of function calls
+    count_of_gradient_calls is count of gradient calls
     """
 
     def __init__(self):
@@ -25,12 +27,20 @@ class StateResult(OptimizeResult):
         self.success: bool = False
         self.guesses: list = []
         self.history: list = []
+        self.count_of_function_calls: int = 0
+        self.count_of_gradient_calls: int = 0
 
     def add_guess(self, guess):
         self.guesses.append(guess)
 
     def add_history(self, val):
         self.history.append(val)
+
+    def add_function_call(self):
+        self.count_of_function_calls += 1
+
+    def add_gradient_call(self):
+        self.count_of_gradient_calls += 1
 
     def get_res(self):
         if not self.success or len(self.guesses) == 0:

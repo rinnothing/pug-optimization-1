@@ -33,12 +33,6 @@ def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 0.8, c2 = 1e-3):
     res.success = True
     return res
 
-def f3(x, y):
-    numerator = (x ** 2 + y ** 2) ** 0.0001
-    denominator = x ** 2 + y ** 2 + 0.1
-    return 1 / denominator + x ** 2 + y ** 2 + y / 2
-
-
 def visualiser(state: common.StateResult, x, lim_x, lim_y):
     X, Y = np.meshgrid(np.linspace(lim_x[0],lim_x[1], 200), np.linspace(lim_y[0], lim_y[1],200))
     Z = state.function([X, Y])
@@ -102,7 +96,7 @@ def visualiser_1(state: common.StateResult, limits, x, c1, c2, y, y_g, freq=50, 
     plt.show()
 
 if __name__ == "__main__":
-    lim = [-13, 10]
+    lim = [-13, 20]
     f = lambda x: x ** 4 / 100 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
     gr = lambda x: x ** 3 / 25 - x ** 2 * 3 / 10 - x + 2
 
@@ -111,8 +105,6 @@ if __name__ == "__main__":
         df_dx0 = 2 * x[0] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2)
         df_dx1 = 2 * x[1] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2) + 1/10
         return np.array([df_dx0, df_dx1])
-
-    f5 = lambda x, y: x ** 2 + y ** 2
     x2 = np.array([-1.5, 1.8])
     step2 = np.array([0.1, -0.5])
     c1 = 0.8
