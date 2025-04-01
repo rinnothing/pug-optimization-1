@@ -4,6 +4,7 @@ import gradient_descent as gr
 from functools import partial
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -20,7 +21,7 @@ def a_b_derivative(fun, x, a, b):
     np.fill_diagonal(matrix_xb, -b)
     matrix_xb += matrix_x
 
-    return (np.apply_along_axis(fun, 1, matrix_xa) - np.apply_along_axis(fun, 1, matrix_xb)) / (a + b)
+    return (np.apply_along_axis(fun, 0, matrix_xa) - np.apply_along_axis(fun, 0, matrix_xb)) / (a + b)
 
 
 def forward_derivative(fun, x, delta=1.0):
@@ -58,62 +59,51 @@ def symmetric_derivative(fun, x, delta=1.0):
 
 # visualiser
 
-def gradient_visualiser(state: common.StateResult, limits, freq=50, l=1, interval=100, y_limits=None, path: str = None,
-                        display=True):
-    fig, ax = plt.subplots()
+def visualiser(state: common.StateResult, lim_x, lim_y):
+    X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
+    Z = state.function([X, Y])
 
-    # setting limits
-    ax.set_xlim(limits)
-    if y_limits is not None:
-        ax.set_ylim(y_limits)
+    fig, ax = plt.subplots(figsize=(10, 8))
+    contour = ax.contourf(X, Y, Z, levels=20, cmap='viridis', alpha=0.7)
+    plt.colorbar(contour, label='f(x, y)')
 
-    t = np.arange(limits[0], limits[1], (limits[1] - limits[0]) / freq)
+    x = state.guesses[0]
+    arrow = matplotlib.patches.Arrow(x[0], x[1], state.guesses[0][0] - x[0], state.guesses[0][1] - x[1], width=0.5,
+                                     color="red")
+    ax.add_patch(arrow)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
 
-    # drawing the base graphic
-    ax.plot(t, state.function(t))
-
-    # adding moving objects
-    point, = ax.plot(0, 0, 'ro')
-    arrow = ax.arrow(0, 0, 0, 0, )
-
-    # making animation function
     def animate(i):
-        nonlocal arrow
-        arrow.remove()
-
-        point_xy = (state.guesses[i], state.function(state.guesses[i]))
-        point.set_data([[i] for i in point_xy])
-
-        der, h = state.history[i]
-        arrow = ax.arrow(point_xy[0], point_xy[1], -der * h * l, -der * der * h * l)
-
-        return point, arrow
+        arrow.set_data(state.guesses[i][0], state.guesses[i][1],
+                       state.guesses[i + 1][0] - state.guesses[i][0], state.guesses[i+1][1] - state.guesses[i][1])
+        return arrow
 
     ani = animation.FuncAnimation(
         fig,
         animate,
-        frames=len(state.history),
+        frames=len(state.guesses)-1,
         repeat=True,
-        interval=interval
+        interval=300
     )
-
-    if path is not None:
-        writer = animation.PillowWriter(fps=15, bitrate=1800)
-        ani.save(path, writer=writer)
-
-    if display:
-        plt.show()
+    plt.show()
 
 
 # maybe will add other later
 
 if __name__ == "__main__":
-    f = lambda p: 1 / (np.square(p) + 0.1) + np.square(p) + p[1] / 10
-    result = gr.gradient_descent(f, partial(gr.forward_derivative, delta=0.05), gr.get_inv_root_step(0.1),
+    f = lambda x: 1/(x[0]**2+x[1]**2+0.1) +x[0]**2+x[1]**2 + x[1]/10
+    def gr2(fun, x, *args, **kwargs):
+        df_dx0 = 2 * x[0] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2)
+        df_dx1 = 2 * x[1] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2) + 1/10
+        return np.array([df_dx0, df_dx1])
+    result = gr.gradient_descent(f, partial(forward_derivative, delta=0.05), gr.get_inv_root_step(0.1),
                                  gr.get_stop_f_eps(0.01),
                                  np.array([-1.9, 1.5]))
     if not result.success:
         print("I'm sorry, no solution")
     else:
         print(result.get_res(), len(result.guesses))
+        print(result.guesses)
         print(result.history)
+        visualiser(result, lim_x=[-2, 2], lim_y=[-2, 2])
