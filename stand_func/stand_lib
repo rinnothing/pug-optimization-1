@@ -1,0 +1,45 @@
+import numpy as np
+import common.tests_function
+import scipy.optimize as opt
+import matplotlib
+matplotlib.use("TkAgg")
+
+def golden_methods(func):
+    i = 0
+    for test_func in func:
+        i += 1
+        lim = test_func.lim
+
+        golden_result = opt.minimize_scalar(test_func.function, bounds=lim, method='bounded')
+        print(f"Function number {i}, Bounds: {lim}")
+        print(f"Golden Search: Calls: {golden_result.nfev}, Result: {golden_result.x}")
+
+        if not golden_result.success:
+            print("Didn't solve")
+# TODO
+def f(x):
+    return x ** 4 / 100.0 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
+def gr(x):
+    return opt.approx_fprime(x, f, epsilon=1e-6)
+def grad_methods(func):
+    for index, test_func in enumerate(func):
+        lim = test_func.lim
+        f = test_func.function
+        x0 = np.random.uniform(-5, 10, size=2)
+        grad_result = opt.minimize(f, x0=x0, jac=gr, method='BFGS')
+        print(f"Function #{index + 1}, Bounds: {lim}")
+        print(f"Gradient Descent: Calls: {grad_result.nfev}, Result: {grad_result.x}")
+
+        if not grad_result.success:
+            print("Didn't solve")
+
+
+if __name__ == "__main__":
+    print("Running Golden Section Search with one min:")
+    golden_methods(common.tests_function.functions_with_one_min)
+    print("-" * 50)
+    print("Running Golden Section Search with local min:")
+    golden_methods(common.tests_function.functions_with_local_min)
+    # print("\nRunning Gradient Descent:")
+    # grad_methods(common.tests_function.functions_with_local_min)
+
