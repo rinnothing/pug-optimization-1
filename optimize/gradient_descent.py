@@ -41,6 +41,7 @@ def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 1
         x = get_next(res, fun, grad, antigrad_val, x)
         res.add_guess(x)
 
+    res.count_of_function_calls = count
     res.success = True
     return res
 
@@ -257,7 +258,7 @@ if __name__ == "__main__":
         new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
         new_lim[0] = min(new_lim[0], result.get_res() - 1)
         new_lim[1] = max(new_lim[1], result.get_res() + 1)
-        vis.visualiser(result, new_lim, 500)
+        vis.visualiser_path(result, new_lim, 500)
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
@@ -268,6 +269,6 @@ if __name__ == "__main__":
         new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
         new_lim[0] = min(new_lim[0], result.get_res() - 1)
         new_lim[1] = max(new_lim[1], result.get_res() + 1)
-        vis.visualiser(result, new_lim, 500)
+        vis.visualiser_path(result, new_lim, 500)
 
 

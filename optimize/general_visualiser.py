@@ -57,3 +57,26 @@ def visualiser(state, limits, freq=50, interval=100, l=1, y_limits=None, path=No
 
     if display:
         plt.show()
+
+def visualiser_path(state, limits, freq=50, interval=100, l=1, y_limits=None, path=None, display=True):
+    fig, ax = plt.subplots()
+
+    # Установка пределов
+    ax.set_xlim(limits)
+    if y_limits is not None:
+        ax.set_ylim(y_limits)
+
+    t = np.linspace(limits[0], limits[1], freq)
+    ax.plot(t, state.function(t))
+
+    ax.plot(state.guesses[0], state.function(state.guesses[0]), 'ro')
+    for i in range(1, len(state.guesses)):
+        ax.plot(state.guesses[i], state.function(state.guesses[i]), 'ro')
+        ax.plot([state.guesses[i-1], state.guesses[i]] ,
+                [state.function(state.guesses[i-1]), state.function(state.guesses[i])], 'green')
+
+    if path is not None:
+        plt.savefig(path)
+
+    if display:
+        plt.show()

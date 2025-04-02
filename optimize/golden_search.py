@@ -80,7 +80,7 @@ if __name__ == "__main__":
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
-        vis.visualiser(result, lim, 200)
+        vis.visualiser_path(result, lim, 200)
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
@@ -88,4 +88,4 @@ if __name__ == "__main__":
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
-        vis.visualiser(result, lim, 200)
+        vis.visualiser_path(result, lim, 200)
