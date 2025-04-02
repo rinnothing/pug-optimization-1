@@ -34,3 +34,10 @@ functions_with_local_min: list = [
     test_function(lambda x: 1 / (x ** 2 + 1) + np.sin(10 * x) / 20 + np.sin(16 * x) / 16 + np.sin(20 * x) / 32 + np.sin(
             32 * x) / 16, [5, 10]),
 ]
+
+functions_with_one_min_2d: list = [
+    test_function(lambda x: (x[0] - 0.5)**2 + (x[1] - 0.5)**2, [-5, 5]),
+    test_function(lambda x: 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) + x[0] ** 2 + x[1] ** 2 + x[1] / 10, [-5, 5]),
+    test_function(lambda x: (x[0] - 0.5)**2 + (x[1] - 0.5)**2 - 10/((x[0]-0.5)**2+1)- 10/((x[1]-0.5)**2+2), [-5, 5]),
+    test_function(lambda x: (x[0]**2 + x[1] - 11)**2 + (x[0] + x[1]**2 - 7) **2, [-5, 5])
+]

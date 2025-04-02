@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import common.tests_function as test_f
 
 
 # if you know derivative explicitly you can use it, but in other cases take a look at those functions
@@ -116,25 +117,17 @@ def visualiser_3d(state: common.StateResult, lim_x, lim_y):
 
     plt.show()
 
-
 if __name__ == "__main__":
-    f = lambda x: 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) + x[0] ** 2 + x[1] ** 2 + x[1] / 10
-
-
-    def gr2(x):
-        df_dx0 = 2 * x[0] * (1 - 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) ** 2)
-        df_dx1 = 2 * x[1] * (1 - 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) ** 2) + 1 / 10
-        return np.array([df_dx0, df_dx1])
-
-
-    result = gr.gradient_descent(f, gr2, gr.get_constant_step(1),
-                                 gr.get_stop_f_eps(0.0001),
-                                 np.array([-1.9, 1.5]))
-    if not result.success:
-        print("I'm sorry, no solution")
-    else:
-        print(result.get_res(), len(result.guesses))
-        print(result.guesses)
-        print(result.history)
-        visualiser_2d(result, lim_x=[-2, 2], lim_y=[-2, 2])
-        visualiser_3d(result, lim_x=[-2, 2], lim_y=[-2, 2])
+    for test_func in test_f.functions_with_one_min_2d:
+        lim = test_func.lim
+        result = gr.gradient_descent(test_func.function, test_func.gradient, gr.get_next_gold,
+                                     gr.get_stop_f_eps(0.0001),
+                                     np.array([-1.9, 1.5]))
+        if not result.success:
+            print("I'm sorry, no solution")
+        else:
+            print(result.get_res(), len(result.guesses))
+            print(result.guesses)
+            print(result.history)
+            visualiser_2d(result, lim_x=lim, lim_y=lim)
+            visualiser_3d(result, lim_x=lim, lim_y=lim)
