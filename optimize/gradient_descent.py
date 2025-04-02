@@ -1,9 +1,7 @@
 import common
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-
+import general_visualiser as vis
 
 def gradient_descent(fun, grad, step, stop, x):
     """
@@ -199,55 +197,6 @@ def get_stop_f_eps(eps):
 
     return stop
 
-
-# visualiser
-
-def gradient_visualiser(state: common.StateResult, limits, freq=50, l=1, interval=100, y_limits = None, path: str = None, display=True):
-    fig, ax = plt.subplots()
-
-    # setting limits
-    ax.set_xlim(limits)
-    if y_limits is not None:
-        ax.set_ylim(y_limits)
-
-    t = np.arange(limits[0], limits[1], (limits[1] - limits[0]) / freq)
-
-    # drawing the base graphic
-    ax.plot(t, state.function(t))
-
-    # adding moving objects
-    point, = ax.plot(0, 0, 'ro')
-    arrow = ax.arrow(0, 0, 0, 0, )
-
-    # making animation function
-    def animate(i):
-        nonlocal arrow
-        arrow.remove()
-
-        point_xy = (state.guesses[i], state.function(state.guesses[i]))
-        point.set_data([[i] for i in point_xy])
-
-        der, h = state.history[i]
-        arrow = ax.arrow(point_xy[0], point_xy[1], -der * h * l, -der * der * h * l)
-
-        return point, arrow
-
-    ani = animation.FuncAnimation(
-        fig,
-        animate,
-        frames=len(state.history),
-        repeat=True,
-        interval=interval
-    )
-
-    if path is not None:
-        writer = animation.PillowWriter(fps=15, bitrate=1800)
-        ani.save(path, writer=writer)
-
-    if display:
-        plt.show()
-
-
 # maybe will add other later
 
 if __name__ == "__main__":
@@ -260,4 +209,4 @@ if __name__ == "__main__":
     if not result.success:
         print("I'm sorry, no solution")
     else:
-        gradient_visualiser(result, [-12, 15], y_limits=[-40, 100], freq=200, l=5, interval=500)
+        vis.visualiser(result, [-12, 15], y_limits=[-40, 100], freq=200, l=5, interval=500)

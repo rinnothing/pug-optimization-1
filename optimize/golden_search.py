@@ -1,9 +1,8 @@
 import common
 import common.tests_function
+import general_visualiser as vis
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 
 def golden_search(fun, max_count_step=1000000, stop=None, bounds=None):
@@ -73,46 +72,6 @@ def get_eps_stop_determiner(eps: float):
     return determiner
 
 
-def visualiser(state: common.StateResult, limits, freq=50, path: str = None):
-    fig, ax = plt.subplots()
-
-    # setting limits
-    ax.set_xlim(limits)
-
-    t = np.arange(limits[0], limits[1], (limits[1] - limits[0]) / freq)
-
-    # drawing the base graphic
-    ax.plot(t, state.function(t))
-
-    # adding moving objects
-    point, = ax.plot(0, 0, 'ro')
-    lline = ax.axvline(0, color='orange')
-    rline = ax.axvline(0, color='orange')
-
-    # making animation function
-    def animate(i):
-        point.set_data([state.guesses[i]], [state.function(state.guesses[i])])
-        left, right = state.history[i]
-        lline.set_xdata([left] * 2)
-        rline.set_xdata([right] * 2)
-
-        return point, lline, rline
-
-    ani = animation.FuncAnimation(
-        fig,
-        animate,
-        frames=len(state.history),
-        repeat=True,
-        interval=500
-    )
-
-    if path is not None:
-        writer = animation.PillowWriter(fps=15, bitrate=1800)
-        ani.save(path, writer=writer)
-
-    plt.show()
-
-
 # example on usage of created functions
 if __name__ == "__main__":
     for test_func in common.tests_function.functions_with_one_min:
@@ -121,7 +80,7 @@ if __name__ == "__main__":
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
-        visualiser(result, lim, 200)
+        vis.visualiser(result, lim, 200)
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
@@ -129,4 +88,4 @@ if __name__ == "__main__":
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
-        visualiser(result, lim, 200)
+        vis.visualiser(result, lim, 200)
