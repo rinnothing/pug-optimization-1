@@ -1,6 +1,6 @@
 import random
 import common.tests_function
-import general_visualiser as vis
+import optimize.general_visualiser as vis
 
 import common
 

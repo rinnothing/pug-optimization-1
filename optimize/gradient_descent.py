@@ -1,4 +1,4 @@
-import general_visualiser as vis
+import optimize.general_visualiser as vis
 import common
 import common.tests_function
 import optimize.wolfe_conditions
@@ -33,16 +33,12 @@ def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 1
     count = 0
     while (not stop(res) or min_count > count) and max_count > count:
         count+=1
-        print(min_count, " ", count)
-        print(not stop(res))
         # calculate gradient
         antigrad_val = -1 * grad(x)
         if np.linalg.norm(antigrad_val) == 0:
             antigrad_val = 1/count
 
-        print(x, "_", antigrad_val)
         x = get_next(res, fun, grad, antigrad_val, x)
-        print(x)
         res.add_guess(x)
 
     res.success = True
@@ -136,7 +132,7 @@ def get_exp_decay_step(h0, l):
     :param l: exp power
     :return: scheduler with given hyperparameters
     """
-    inv_exp = np.exp(-l)
+    inv_exp = np.exp(l)
     h = h0 / inv_exp
 
     def step(state, fun, grad, antigrad_val, x):

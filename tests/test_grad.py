@@ -1,74 +1,78 @@
+import random
+import time
+
+import numpy as np
+
 import optimize.golden_search
 import optimize.random_search
 import common.tests_function
+import optimize.gradient_descent as gr
+import common.tests_function as test_fun
+import optimize.multidim_gradient as mgr
 
+class test_more_fun:
+    def __init__(self, name, function, grad):
+        self.name = name
+        self.function = function
+        self.grad = grad
+        self.predicts: list = []
+        self.starts: list = []
+        self.count: list = []
+        self.time: list = []
+    def add_in_last_predicate(self, v):
+        self.predicts[-1] += v
+    def add_in_last_starts(self, v):
+        self.starts[-1] += v
 
-def get_eps_stop_determiner(eps: float):
-    """
-    eps bounds difference stopper, only works for binary search
-    :param eps: value, that determines what bounds difference it should stop
-    :return: to stop or not
-    """
+    def add_in_last_time(self, v):
+        self.time[-1] += v
+    def add_new_tests(self, count):
+        self.predicts.append(0)
+        self.starts.append(0)
+        self.time.append(0)
+        self.count.append(count)
 
-    def determiner(state: common.OptimizeResult) -> bool:
-        return (state.history[-1][1] - state.history[-1][0]) < eps
+def run_func(fun, grad, get_next, stop = gr.get_stop_x_eps(0.01), point = np.array([0, 0])):
+    return gr.gradient_descent(fun, grad, get_next, stop, point, max_count=100)
 
-    return determiner
+def default_grad(fun):
+    return fun.gradient
 
+tests_fun = [
+    test_more_fun("gol_d", gr.get_next_gold, default_grad),
+    test_more_fun("ran_d", gr.get_next_random, default_grad),
+    test_more_fun("wol_d", gr.get_next_wolfe, default_grad),
+ #   test_more_fun("con_d_1", gr.get_constant_step(1), default_grad),
+ #   test_more_fun("con_d_05", gr.get_constant_step(0.5), default_grad),
+ #   test_more_fun("con_d_01", gr.get_constant_step(0.1), default_grad),
+    test_more_fun("par_d_1", gr.get_partial_stuck_step(0.01, 1), default_grad),
+    test_more_fun("par_d_05", gr.get_partial_stuck_step(0.01, 0.5), default_grad),
+    test_more_fun("par_d_01", gr.get_partial_stuck_step(0.01, 0.1), default_grad)
+]
 
-def print_check_random_search(function, lim, count):
-    print("Random search result(" , count, " launches):")
-    first_res = optimize.random_search.random_search(function, stop=get_eps_stop_determiner(0.01),
-                                                     bounds=lim)
-    first_find_res = function(first_res.get_res())
-    print("First start:")
-    print("Count of function calls: ", first_res.count_of_function_calls, " | result: ", first_find_res)
-    res_with_min = [first_find_res, first_res.count_of_function_calls]
-    res_with_max = [first_find_res, first_res.count_of_function_calls]
-    res_with_min_call = [first_find_res, first_res.count_of_function_calls]
-    res_with_max_call = [first_find_res, first_res.count_of_function_calls]
-    sum_res = [first_find_res, first_res.count_of_function_calls]
-    for i in range(1, count):
-        new_res = optimize.random_search.random_search(function, stop=get_eps_stop_determiner(0.01),
-                                                     bounds=lim)
-        new_res_pair=[function(new_res.get_res()), new_res.count_of_function_calls]
-        sum_res = [sum_res[0] + new_res_pair[0], sum_res[1] + new_res_pair[1]]
-        if res_with_min[0] > new_res_pair[0]:
-            res_with_min = new_res_pair
-        if res_with_max[0] < new_res_pair[0]:
-            res_with_max = new_res_pair
-        if res_with_min_call[1] > new_res_pair[1]:
-            res_with_min_call = new_res_pair
-        if res_with_max_call[1] < new_res_pair[1]:
-            res_with_max_call = new_res_pair
-    print("Minimum result:")
-    print("Count of function calls: ", res_with_min[1], " | result: ", res_with_min[0])
-    print("Maximum result:")
-    print("Count of function calls: ", res_with_max[1], " | result: ", res_with_max[0])
-    print("Minimum function calls result:")
-    print("Count of function calls: ", res_with_min_call[1], " | result: ", res_with_min_call[0])
-    print("Maximum function calls result:")
-    print("Count of function calls: ", res_with_min_call[1], " | result: ", res_with_min_call[0])
-    print("Middle result:")
-    print("Count of function calls: ", sum_res[1]/count, " | result: ", sum_res[0]/count)
+print("Test 2d with one min")
+count2 =4
+for t_fun in test_fun.functions_with_one_min_2d:
+    lim = t_fun.lim
+    count2-=1
+    print(count2)
+    for f in tests_fun:
+        f.add_new_tests(20)
+    for _ in range(20):
+        x = random.uniform(lim[0], lim[1])
+        y = random.uniform(lim[0], lim[1])
+        for f in tests_fun:
+            start_time = time.time()
+            res = run_func(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
+            end_time = time.time()
+            f.add_in_last_starts(len(res.guesses))
+            f.add_in_last_predicate(res.get_res())
+            f.add_in_last_time(end_time - start_time)
+           # mgr.visualiser_2d(res, lim_x=lim, lim_y=lim)
+            #mgr.visualiser_3d(res, lim_x=lim, lim_y=lim)
 
-
-def check_functions(functions):
-    i = 0
-    for test_function in functions:
-        i += 1
-        lim = test_function.lim
-        print("-------------------------------------")
-        print("Function number ", i, ":")
-        print("Golden search result: ")
-        result = optimize.golden_search.golden_search(test_function.function, stop=get_eps_stop_determiner(0.01),
-                                                      bounds=lim)
-        print("Count of function calls: ", result.count_of_function_calls, " | result: ", test_function.function(result.get_res()))
-        print_check_random_search(test_function.function, lim, 100)
-
-print("Functions with one min:")
-check_functions(common.tests_function.functions_with_one_min)
-print("")
-print("")
-print("Functions with local min:")
-check_functions(common.tests_function.functions_with_local_min)
+print(count2)
+for f in tests_fun:
+    print(f.name, ": ")
+    for i in range(len(f.count)):
+        print("func numb: ", i + 1, " sum_min_value: ", f.predicts[i] / f.count[i], " | count iteration: ", f.starts[i] / f.count[i], f" | Время выполнения: {f.time[i]:.4f} секунд")

@@ -1,5 +1,5 @@
 import common
-import gradient_descent as gr
+import optimize.gradient_descent as gr
 
 from functools import partial
 
@@ -85,7 +85,7 @@ def visualiser_2d(state: common.StateResult, lim_x, lim_y):
         animate,
         frames=len(state.guesses) - 1,
         repeat=True,
-        interval=300
+        interval=100
     )
     plt.show()
 
@@ -109,7 +109,7 @@ def visualiser_3d(state: common.StateResult, lim_x, lim_y):
         point.set_data_3d([guesses[i, 0]], [guesses[i, 1]], [state.function(guesses[i])])
         return point,
 
-    ani = animation.FuncAnimation(fig, animate, frames=len(state.guesses), interval=300, blit=True)
+    ani = animation.FuncAnimation(fig, animate, frames=len(state.guesses), interval=100, blit=True)
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -120,7 +120,7 @@ def visualiser_3d(state: common.StateResult, lim_x, lim_y):
 if __name__ == "__main__":
     for test_func in test_f.functions_with_one_min_2d:
         lim = test_func.lim
-        result = gr.gradient_descent(test_func.function, test_func.gradient, gr.get_next_gold,
+        result = gr.gradient_descent(test_func.function, test_func.gradient, gr.get_next_wolfe,
                                      gr.get_stop_f_eps(0.0001),
                                      np.array([-1.9, 1.5]))
         if not result.success:
