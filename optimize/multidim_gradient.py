@@ -127,7 +127,7 @@ if __name__ == "__main__":
         return np.array([df_dx0, df_dx1])
 
 
-    result = gr.gradient_descent(f, gr2, gr.get_next_wolfe,
+    result = gr.gradient_descent(f, gr2, gr.get_constant_step(1),
                                  gr.get_stop_f_eps(0.0001),
                                  np.array([-1.9, 1.5]))
     if not result.success:

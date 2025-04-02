@@ -41,7 +41,7 @@ def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 1
             antigrad_val = 1/count
 
         print(x, "_", antigrad_val)
-        x = get_next(fun, grad, antigrad_val, x)
+        x = get_next(res, fun, grad, antigrad_val, x)
         print(x)
         res.add_guess(x)
 
@@ -98,8 +98,8 @@ def get_constant_step(h_constant):
     :return: scheduler with given hyperparameters
     """
 
-    def step(fun, grad_val, state):
-        return h_constant
+    def step(state, fun, grad, antigrad_val, x):
+        return x + h_constant * antigrad_val
 
     return step
 
@@ -114,7 +114,7 @@ def get_partial_stuck_step(eps, h0, divisor=2.0):
     """
     h = h0
 
-    def step(fun, grad_val, state: common.StateResult):
+    def step(state, fun, grad, antigrad_val, x):
         nonlocal h
         # if we return to the same place - change h
         if len(state.guesses) >= 3:
@@ -124,7 +124,7 @@ def get_partial_stuck_step(eps, h0, divisor=2.0):
             if dist < eps:
                 h /= divisor
 
-        return h
+        return x + antigrad_val * h
 
     return step
 
@@ -139,11 +139,11 @@ def get_exp_decay_step(h0, l):
     inv_exp = np.exp(-l)
     h = h0 / inv_exp
 
-    def step(fun, grad_val, state):
+    def step(state, fun, grad, antigrad_val, x):
         nonlocal h
 
         h *= inv_exp
-        return h
+        return x + antigrad_val * h
 
     return step
 
@@ -158,11 +158,11 @@ def get_pol_decay_step(h0, a, b):
     """
     k = -1
 
-    def step(fun, grad_val, state):
+    def step(state, fun, grad, antigrad_val, x):
         nonlocal k
 
         k += 1
-        return h0 * np.power((b * k + 1), a)
+        return x + antigrad_val * h0 * np.power((b * k + 1), a)
 
     return step
 
@@ -175,11 +175,11 @@ def get_inv_root_step(h0):
     """
     k = -1
 
-    def step(fun, grad_val, state):
+    def step(state, fun, grad, antigrad_val, x):
         nonlocal k
 
         k += 1
-        return h0 / np.sqrt(k + 1)
+        return x + antigrad_val * h0 / np.sqrt(k + 1)
 
     return step
 
@@ -221,21 +221,27 @@ def get_eps_stop_determiner(eps: float):
     return determiner
 
 
-def get_next_gold(fun, grad, antigrad_val, x):
+def get_next_gold(state, fun, grad, antigrad_val, x):
     def func_for_gold(y):
         return fun(x + antigrad_val * y)
     res = optimize.golden_search.golden_search(func_for_gold, stop=get_eps_stop_determiner(0.01), bounds=[0, 1])
     return x + antigrad_val * res.get_res()
 
-def get_next_random(fun, grad, antigrad_val, x):
+def get_next_random(state, fun, grad, antigrad_val, x):
     def func_for_random(y):
         return fun(x + antigrad_val * y)
     res = optimize.random_search.random_search(func_for_random, stop=get_eps_stop_determiner(0.01), bounds=[0, 1])
     return x + antigrad_val * res.get_res()
 
-def get_next_wolfe(fun, grad, antigrad_val, x):
+def get_next_wolfe(state, fun, grad, antigrad_val, x):
     res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val, x)
     return res.get_res()
+
+def create_grad_from_bad_func(fun, bad_func):
+    def grad(x):
+        return bad_func(fun, x)
+    return grad
+
 
 # maybe will add other later
 
@@ -248,20 +254,24 @@ if __name__ == "__main__":
 
     for test_func in common.tests_function.functions_with_one_min:
         lim = test_func.lim
-        result = gradient_descent(test_func.function, test_func.gradient, get_next_wolfe, get_stop_x_eps(0.01), np.array([lim[0]]))
+        result = gradient_descent(test_func.function, create_grad_from_bad_func(test_func.function, symmetric_derivative), get_next_gold, get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
         new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
+        new_lim[0] = min(new_lim[0], result.get_res() - 1)
+        new_lim[1] = max(new_lim[1], result.get_res() + 1)
         vis.visualiser(result, new_lim, 500)
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
-        result = gradient_descent(test_func.function, test_func.gradient, get_next_wolfe, get_stop_x_eps(0.01), np.array([lim[0]]))
+        result = gradient_descent(test_func.function, test_func.gradient, get_next_gold, get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
         new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
+        new_lim[0] = min(new_lim[0], result.get_res() - 1)
+        new_lim[1] = max(new_lim[1], result.get_res() + 1)
         vis.visualiser(result, new_lim, 500)
 
 
