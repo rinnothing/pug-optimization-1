@@ -76,13 +76,13 @@ def visualiser(state: common.StateResult, lim_x, lim_y):
 
     def animate(i):
         arrow.set_data(state.guesses[i][0], state.guesses[i][1],
-                       state.guesses[i + 1][0] - state.guesses[i][0], state.guesses[i+1][1] - state.guesses[i][1])
+                       state.guesses[i + 1][0] - state.guesses[i][0], state.guesses[i + 1][1] - state.guesses[i][1])
         return arrow
 
     ani = animation.FuncAnimation(
         fig,
         animate,
-        frames=len(state.guesses)-1,
+        frames=len(state.guesses) - 1,
         repeat=True,
         interval=300
     )
@@ -90,13 +90,43 @@ def visualiser(state: common.StateResult, lim_x, lim_y):
 
 
 # maybe will add other later
+def visualiser_3d(state: common.StateResult, lim_x, lim_y):
+    X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 100), np.linspace(lim_y[0], lim_y[1], 100))
+    Z = state.function([X, Y])
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(X, Y, Z, cmap='viridis', alpha=0.6)
+
+    guesses = np.array(state.guesses)
+    ax.plot(guesses[:, 0], guesses[:, 1], state.function(guesses.T), 'ro-', markersize=5)
+
+    point, = ax.plot([], [], [], 'bo', markersize=8)
+
+    def animate(i):
+        point.set_data_3d([guesses[i, 0]], [guesses[i, 1]], [state.function(guesses[i])])
+        return point,
+
+    ani = animation.FuncAnimation(fig, animate, frames=len(state.guesses), interval=300, blit=True)
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('f(X, Y)')
+
+    plt.show()
+
 
 if __name__ == "__main__":
-    f = lambda x: 1/(x[0]**2+x[1]**2+0.1) +x[0]**2+x[1]**2 + x[1]/10
+    f = lambda x: 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) + x[0] ** 2 + x[1] ** 2 + x[1] / 10
+
+
     def gr2(fun, x, *args, **kwargs):
-        df_dx0 = 2 * x[0] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2)
-        df_dx1 = 2 * x[1] * (1 - 1 / (x[0]**2 + x[1]**2 + 0.1)**2) + 1/10
+        df_dx0 = 2 * x[0] * (1 - 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) ** 2)
+        df_dx1 = 2 * x[1] * (1 - 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) ** 2) + 1 / 10
         return np.array([df_dx0, df_dx1])
+
+
     result = gr.gradient_descent(f, partial(forward_derivative, delta=0.05), gr.get_inv_root_step(0.1),
                                  gr.get_stop_f_eps(0.01),
                                  np.array([-1.9, 1.5]))
@@ -107,3 +137,4 @@ if __name__ == "__main__":
         print(result.guesses)
         print(result.history)
         visualiser(result, lim_x=[-2, 2], lim_y=[-2, 2])
+        visualiser_3d(result, lim_x=[-2, 2], lim_y=[-2, 2])
