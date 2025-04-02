@@ -247,9 +247,10 @@ if __name__ == "__main__":
     # gr = lambda fun, x: 4 * x ** 3 - 10 * x + 2
     f = lambda x: x ** 4 / 100.0 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
     gr = lambda fun, x: x ** 3 / 25.0 - x ** 2 * 3.0 / 10.0 - x + 2.0
-
+    index = 0
     for test_func in common.tests_function.functions_with_one_min:
         lim = test_func.lim
+        index += 1
         result = gradient_descent(test_func.function, create_grad_from_bad_func(test_func.function, symmetric_derivative), get_next_gold, get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
@@ -257,10 +258,11 @@ if __name__ == "__main__":
         new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
         new_lim[0] = min(new_lim[0], result.get_res() - 1)
         new_lim[1] = max(new_lim[1], result.get_res() + 1)
-        vis.visualiser(result, new_lim, 500)
+        vis.visualiser(result, new_lim, index, 500)
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
+        index += 1
         result = gradient_descent(test_func.function, test_func.gradient, get_next_gold, get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
@@ -268,6 +270,6 @@ if __name__ == "__main__":
         new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
         new_lim[0] = min(new_lim[0], result.get_res() - 1)
         new_lim[1] = max(new_lim[1], result.get_res() + 1)
-        vis.visualiser(result, new_lim, 500)
+        vis.visualiser(result, new_lim, index, 500)
 
 

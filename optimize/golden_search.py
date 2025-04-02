@@ -74,18 +74,21 @@ def get_eps_stop_determiner(eps: float):
 
 # example on usage of created functions
 if __name__ == "__main__":
+    index = 0
     for test_func in common.tests_function.functions_with_one_min:
         lim = test_func.lim
+        index += 1
         result = golden_search(test_func.function, stop=get_eps_stop_determiner(0.1), bounds=lim)
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
-        vis.visualiser(result, lim, 200)
+        vis.visualiser(result, lim, index, 200)
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
+        index += 1
         result = golden_search(test_func.function, stop=get_eps_stop_determiner(0.1), bounds=lim)
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
-        vis.visualiser(result, lim, 200)
+        vis.visualiser(result, lim, index, 200)

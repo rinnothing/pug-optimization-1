@@ -8,6 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import common.tests_function as test_f
+import saving_png as savepng
 
 
 # if you know derivative explicitly you can use it, but in other cases take a look at those functions
@@ -58,9 +59,8 @@ def symmetric_derivative(fun, x, delta=1.0):
     return a_b_derivative(fun, x, delta, delta)
 
 
-# visualiser
-
-def visualiser_2d(state: common.StateResult, lim_x, lim_y):
+# Основная функция для визуализации анимаци
+def visualiser_2d(state: common.StateResult, lim_x, lim_y, index):
     X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
     Z = state.function([X, Y])
 
@@ -68,27 +68,33 @@ def visualiser_2d(state: common.StateResult, lim_x, lim_y):
     contour = ax.contourf(X, Y, Z, levels=20, cmap='viridis', alpha=0.7)
     plt.colorbar(contour, label='f(x, y)')
 
-    x = state.guesses[0]
-    arrow = matplotlib.patches.Arrow(x[0], x[1], state.guesses[0][0] - x[0], state.guesses[0][1] - x[1], width=0.5,
-                                     color="red")
-    ax.add_patch(arrow)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    guesses = np.array(state.guesses)
+
+    trajectory, = ax.plot([], [], 'r-', linewidth=2)
+    path_points = ax.scatter([], [], color='red', s=30)
+    point, = ax.plot([], [], 'bo', markersize=8)
 
     def animate(i):
-        arrow.set_data(state.guesses[i][0], state.guesses[i][1],
-                       state.guesses[i + 1][0] - state.guesses[i][0], state.guesses[i + 1][1] - state.guesses[i][1])
-        return arrow
+
+        trajectory.set_data(guesses[:i + 1, 0], guesses[:i + 1, 1])
+        path_points.set_offsets(guesses[:i + 1])
+        point.set_data([guesses[i, 0]], [guesses[i, 1]])
+        return trajectory, path_points, point
 
     ani = animation.FuncAnimation(
         fig,
         animate,
-        frames=len(state.guesses) - 1,
-        repeat=True,
-        interval=100
+        frames=len(state.guesses),
+        interval=300,
+        blit=False,
     )
-    plt.show()
 
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ani.event_source.stop()
+    savepng.save_final_grad(state, lim_x, lim_y, index)
+
+    plt.show()
 
 # maybe will add other later
 def visualiser_3d(state: common.StateResult, lim_x, lim_y):
@@ -117,8 +123,11 @@ def visualiser_3d(state: common.StateResult, lim_x, lim_y):
 
     plt.show()
 
+
 if __name__ == "__main__":
+    index = 0
     for test_func in test_f.functions_with_one_min_2d:
+        index += 1
         lim = test_func.lim
         result = gr.gradient_descent(test_func.function, test_func.gradient, gr.get_next_wolfe,
                                      gr.get_stop_f_eps(0.0001),
@@ -129,5 +138,5 @@ if __name__ == "__main__":
             print(result.get_res(), len(result.guesses))
             print(result.guesses)
             print(result.history)
-            visualiser_2d(result, lim_x=lim, lim_y=lim)
+            visualiser_2d(result, lim_x=lim, lim_y=lim, index=index)
             visualiser_3d(result, lim_x=lim, lim_y=lim)
