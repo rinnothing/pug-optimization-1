@@ -20,9 +20,11 @@ def visualiser(state, limits, freq=50, interval=100, l=1, y_limits=None, path=No
 
     point, = ax.plot(0, 0, 'ro')
     arrow = None
-    if isinstance(state.history[0], np.ndarray) and len(state.history[0]) == 2:
-        lline = ax.axvline(0, color='orange')
-        rline = ax.axvline(0, color='orange')
+
+    if len(state.history) != 0:
+        if isinstance(state.history[0], np.ndarray) and len(state.history[0]) == 2:
+            lline = ax.axvline(0, color='orange')
+            rline = ax.axvline(0, color='orange')
 
     def animate(i):
         nonlocal arrow
@@ -32,19 +34,21 @@ def visualiser(state, limits, freq=50, interval=100, l=1, y_limits=None, path=No
         guess = state.guesses[i]
         point.set_data([guess], [state.function(guess)])
 
-        if isinstance(state.history[i], np.ndarray) and len(state.history[i]) == 2:
-            left, right = state.history[i]
-            lline.set_xdata([left] * 2)
-            rline.set_xdata([right] * 2)
-            return point, lline, rline
-        elif len(state.history[i]) == 2:
-            grad_val, step = state.history[i]
-            arrow = ax.arrow(guess, state.function(guess), -grad_val * step * l, -grad_val * grad_val * step * l,
-                             head_width=0.5, head_length=0.5, fc='blue', ec='black')
-            return point, arrow
+        if len(state.history) != 0 :
+            if isinstance(state.history[i], np.ndarray) and len(state.history[i]) == 2:
+                left, right = state.history[i]
+                lline.set_xdata([left] * 2)
+                rline.set_xdata([right] * 2)
+                return point, lline, rline
+            elif len(state.history[i]) == 2:
+                grad_val, step = state.history[i]
+                arrow = ax.arrow(guess, state.function(guess), -grad_val * step * l, -grad_val * grad_val * step * l,
+                                 head_width=0.5, head_length=0.5, fc='blue', ec='black')
+                return point, arrow
+        return point
 
     ani = animation.FuncAnimation(
-        fig, animate, frames=len(state.history), repeat=True, interval=interval
+        fig, animate, frames=len(state.guesses), repeat=True, interval=interval
     )
 
     if path is not None:

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 0.8, c2 = 1e-3):
+def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 0.9, c2 = 1e-5):
     res = common.StateResult()
     res.function = fun
 

@@ -59,7 +59,7 @@ def symmetric_derivative(fun, x, delta=1.0):
 
 # visualiser
 
-def visualiser(state: common.StateResult, lim_x, lim_y):
+def visualiser_2d(state: common.StateResult, lim_x, lim_y):
     X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
     Z = state.function([X, Y])
 
@@ -121,14 +121,14 @@ if __name__ == "__main__":
     f = lambda x: 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) + x[0] ** 2 + x[1] ** 2 + x[1] / 10
 
 
-    def gr2(fun, x, *args, **kwargs):
+    def gr2(x):
         df_dx0 = 2 * x[0] * (1 - 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) ** 2)
         df_dx1 = 2 * x[1] * (1 - 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) ** 2) + 1 / 10
         return np.array([df_dx0, df_dx1])
 
 
-    result = gr.gradient_descent(f, partial(forward_derivative, delta=0.05), gr.get_inv_root_step(0.1),
-                                 gr.get_stop_f_eps(0.01),
+    result = gr.gradient_descent(f, gr2, gr.get_next_wolfe,
+                                 gr.get_stop_f_eps(0.0001),
                                  np.array([-1.9, 1.5]))
     if not result.success:
         print("I'm sorry, no solution")
@@ -136,5 +136,5 @@ if __name__ == "__main__":
         print(result.get_res(), len(result.guesses))
         print(result.guesses)
         print(result.history)
-        visualiser(result, lim_x=[-2, 2], lim_y=[-2, 2])
+        visualiser_2d(result, lim_x=[-2, 2], lim_y=[-2, 2])
         visualiser_3d(result, lim_x=[-2, 2], lim_y=[-2, 2])

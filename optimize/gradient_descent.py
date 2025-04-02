@@ -1,14 +1,23 @@
+import general_visualiser as vis
 import common
+import common.tests_function
+import optimize.wolfe_conditions
+import optimize.golden_search
+import optimize.random_search
 
 import numpy as np
-import general_visualiser as vis
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
-def gradient_descent(fun, grad, step, stop, x):
+import optimize.wolfe_conditions
+
+
+def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 100):
     """
     makes gradient descent using given operators
     :param fun: is a function that we are optimizing
     :param grad: is a function that calculates gradient for fun in a given point
-    :param step: is a function that calculates the step based on function, gradient value and current state
+    :param get_next: is a function that get next value
     :param stop: is a function that determines when to stop
     :param x: is a point from which we start optimizing
     :return:
@@ -21,19 +30,20 @@ def gradient_descent(fun, grad, step, stop, x):
     res.add_guess(x)
 
     # doing steps until the end
-    while not stop(res):
+    count = 0
+    while (not stop(res) or min_count > count) and max_count > count:
+        count+=1
+        print(min_count, " ", count)
+        print(not stop(res))
         # calculate gradient
-        grad_val = grad(fun, x)
+        antigrad_val = -1 * grad(x)
+        if np.linalg.norm(antigrad_val) == 0:
+            antigrad_val = 1/count
 
-        # calculate step
-        h = step(fun, grad_val, state=res)
-
-        # doing a step
-        x = x - grad_val * h
+        print(x, "_", antigrad_val)
+        x = get_next(fun, grad, antigrad_val, x)
+        print(x)
         res.add_guess(x)
-
-        # storing context information
-        res.add_history([grad_val, h])
 
     res.success = True
     return res
@@ -177,10 +187,10 @@ def get_inv_root_step(h0):
 # absolute stoppers
 def get_stop_x_eps(eps):
     def stop(state: common.StateResult):
-        if len(state.history) < 2:
+        if len(state.guesses) < 2:
             return False
 
-        return np.linalg.norm(state.history[-1] - state.history[-2]) < eps
+        return np.linalg.norm(state.guesses[-1] - state.guesses[-2]) < eps
 
     return stop
 
@@ -197,6 +207,36 @@ def get_stop_f_eps(eps):
 
     return stop
 
+
+def get_eps_stop_determiner(eps: float):
+    """
+    eps bounds difference stopper, only works for binary search
+    :param eps: value, that determines what bounds difference it should stop
+    :return: to stop or not
+    """
+
+    def determiner(state: common.OptimizeResult) -> bool:
+        return (state.history[-1][1] - state.history[-1][0]) < eps
+
+    return determiner
+
+
+def get_next_gold(fun, grad, antigrad_val, x):
+    def func_for_gold(y):
+        return fun(x + antigrad_val * y)
+    res = optimize.golden_search.golden_search(func_for_gold, stop=get_eps_stop_determiner(0.01), bounds=[0, 1])
+    return x + antigrad_val * res.get_res()
+
+def get_next_random(fun, grad, antigrad_val, x):
+    def func_for_random(y):
+        return fun(x + antigrad_val * y)
+    res = optimize.random_search.random_search(func_for_random, stop=get_eps_stop_determiner(0.01), bounds=[0, 1])
+    return x + antigrad_val * res.get_res()
+
+def get_next_wolfe(fun, grad, antigrad_val, x):
+    res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val, x)
+    return res.get_res()
+
 # maybe will add other later
 
 if __name__ == "__main__":
@@ -205,8 +245,23 @@ if __name__ == "__main__":
     # gr = lambda fun, x: 4 * x ** 3 - 10 * x + 2
     f = lambda x: x ** 4 / 100.0 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
     gr = lambda fun, x: x ** 3 / 25.0 - x ** 2 * 3.0 / 10.0 - x + 2.0
-    result = gradient_descent(f, symmetric_derivative, get_inv_root_step(1), get_stop_f_eps(0.01), 3)
-    if not result.success:
-        print("I'm sorry, no solution")
-    else:
-        vis.visualiser(result, [-12, 15], y_limits=[-40, 100], freq=200, l=5, interval=500)
+
+    for test_func in common.tests_function.functions_with_one_min:
+        lim = test_func.lim
+        result = gradient_descent(test_func.function, test_func.gradient, get_next_wolfe, get_stop_x_eps(0.01), np.array([lim[0]]))
+        print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
+        if not result.success:
+            print("didn't solve")
+        new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
+        vis.visualiser(result, new_lim, 500)
+    print("start functions with local min")
+    for test_func in common.tests_function.functions_with_local_min:
+        lim = test_func.lim
+        result = gradient_descent(test_func.function, test_func.gradient, get_next_wolfe, get_stop_x_eps(0.01), np.array([lim[0]]))
+        print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
+        if not result.success:
+            print("didn't solve")
+        new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
+        vis.visualiser(result, new_lim, 500)
+
+
