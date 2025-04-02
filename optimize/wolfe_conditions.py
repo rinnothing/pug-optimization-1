@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 0.9, c2 = 1e-5):
+def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 1e-4, c2 = 0.9):
     res = common.StateResult()
     res.function = fun
 
@@ -18,7 +18,7 @@ def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 0.9, c2 = 1e-5):
         grad_x = grad(x)
         grad_new = grad(new_x)
         lower = new_y > y + c1 * np.dot(step, grad_x)
-        curvature = np.sum(grad_new) >= np.sum(c2 * grad_x)
+        curvature = np.sum(grad_new) <= np.sum(c2 * grad_x)
         res.add_guess(new_x)
 
         if not lower and curvature:
@@ -26,9 +26,9 @@ def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 0.9, c2 = 1e-5):
             return res
 
         if lower:
-            step = (1 - 0.5 / i) * step
+            step = (1 - 0.5 ) * step
         else:
-            step = (1 + 1 / i) * step
+            step = (1 + 1) * step
 
     res.success = True
     return res
@@ -96,7 +96,7 @@ def visualiser_1(state: common.StateResult, limits, x, c1, c2, y, y_g, freq=50, 
     plt.show()
 
 if __name__ == "__main__":
-    lim = [-13, 20]
+    lim = [-13, 25]
     f = lambda x: x ** 4 / 100 - x ** 3 / 10 - x ** 2 / 2 + 2 * x + 5
     gr = lambda x: x ** 3 / 25 - x ** 2 * 3 / 10 - x + 2
 
@@ -107,8 +107,8 @@ if __name__ == "__main__":
         return np.array([df_dx0, df_dx1])
     x2 = np.array([-1.5, 1.8])
     step2 = np.array([0.1, -0.5])
-    c1 = 0.8
-    c2 = 1e-3
+    c1 = 1e-3
+    c2 = 0.9
     lim_x = [-3, 3]
     lim_y = [-3, 3]
     res2 = wolfe_conditions(f2, gr2, step2, x2, 20, c1, c2)
@@ -117,4 +117,5 @@ if __name__ == "__main__":
     x1 = np.array(-10)
     step1 = np.array(4)
     res1 = wolfe_conditions(f, gr, step1, x1, 20, c1, c2)
+    print(res1.guesses)
     visualiser_1(res1, lim, x1, c1, c2, f(x1), gr(x1))

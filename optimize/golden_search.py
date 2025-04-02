@@ -5,7 +5,7 @@ import optimize.general_visualiser as vis
 import numpy as np
 
 
-def golden_search(fun, max_count_step=1000000, stop=None, bounds=None):
+def golden_search(fun, max_count_step=1000, stop=None, bounds=None):
     res = common.StateResult()
     # putting fun
     res.function = fun
