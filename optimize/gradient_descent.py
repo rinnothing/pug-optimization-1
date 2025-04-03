@@ -47,6 +47,8 @@ def gradient_descent(fun, grad, get_next, stop, x,  min_x = np.array([-100, -100
 
         res.add_guess(x)
 
+    res.count_of_function_calls = count
+
     res.add_guess(save_min_value[0])
     res.success = True
     return res

@@ -117,7 +117,30 @@ def visualiser_3d(state: common.StateResult, lim_x, lim_y):
 
     plt.show()
 
+# maybe will add other later
+def visualiser_3d_graph(state: common.StateResult, lim_x, lim_y):
+    X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 100), np.linspace(lim_y[0], lim_y[1], 100))
+    Z = state.function([X, Y])
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(X, Y, Z, cmap='viridis', alpha=0.6)
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('f(X, Y)')
+
+    plt.show()
+
 if __name__ == "__main__":
+    for test_func in test_f.functions_with_local_min_2d:
+        res = common.StateResult()
+        res.function = test_func.function
+        lim = test_func.lim
+
+        visualiser_3d_graph(res, lim_x=lim, lim_y=lim)
+
     for test_func in test_f.functions_with_one_min_2d:
         lim = test_func.lim
         result = gr.gradient_descent(test_func.function, test_func.gradient, gr.get_next_wolfe,
