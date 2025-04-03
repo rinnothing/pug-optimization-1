@@ -116,3 +116,31 @@ for f in tests_fun:
     print(f.name, ": ")
     for i in range(len(f.count)):
         print("func numb: ", i + 1, " sum_min_value: ", f.predicts[i] / f.count[i], " | count iteration: ", f.starts[i] / f.count[i], f" | Время выполнения: {f.time[i]:.4f} секунд")
+
+print("Test 2d with local min")
+count2 = 4
+for t_fun in test_fun.functions_with_local_min_2d:
+    lim = t_fun.lim
+    count2 -= 1
+    print(count2)
+    for f in tests_fun:
+        f.add_new_tests(100)
+    for _ in range(100):
+        x = random.uniform(lim[0], lim[1])
+        y = random.uniform(lim[0], lim[1])
+        for f in tests_fun:
+            start_time = time.time()
+            res = run_func(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
+            end_time = time.time()
+            f.add_in_last_starts(len(res.guesses))
+            f.add_in_last_predicate(res.get_res())
+            f.add_in_last_time(end_time - start_time)
+        # mgr.visualiser_2d(res, lim_x=lim, lim_y=lim)
+        # mgr.visualiser_3d(res, lim_x=lim, lim_y=lim)
+
+print(count2)
+for f in tests_fun:
+    print(f.name, ": ")
+    for i in range(len(f.count)):
+        print("func numb: ", i + 1, " sum_min_value: ", f.predicts[i] / f.count[i], " | count iteration: ",
+              f.starts[i] / f.count[i], f" | Время выполнения: {f.time[i]:.4f} секунд")

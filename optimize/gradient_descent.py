@@ -12,7 +12,7 @@ import matplotlib.animation as animation
 import optimize.wolfe_conditions
 
 
-def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 100):
+def gradient_descent(fun, grad, get_next, stop, x,  min_x = np.array([-100, -100]), max_x = np.array([100, 100]), min_count = 10, max_count = 100):
     """
     makes gradient descent using given operators
     :param fun: is a function that we are optimizing
@@ -28,7 +28,7 @@ def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 1
 
     # putting initial value as first guess
     res.add_guess(x)
-
+    save_min_value = [x, fun(x)]
     # doing steps until the end
     count = 0
     while (not stop(res) or min_count > count) and max_count > count:
@@ -37,11 +37,17 @@ def gradient_descent(fun, grad, get_next, stop, x, min_count = 10, max_count = 1
         antigrad_val = -1 * grad(x)
         if np.linalg.norm(antigrad_val) == 0:
             antigrad_val = 1/count
-
         x = get_next(res, fun, grad, antigrad_val, x)
+        fun_x = fun(x)
+        if fun_x < save_min_value[1]:
+            save_min_value = [x, fun_x]
+        for i in range(len(x)):
+            x[i] = min(x[i], max_x[i])
+            x[i] = max(x[i], min_x[i])
+
         res.add_guess(x)
 
-    res.count_of_function_calls = count
+    res.add_guess(save_min_value[0])
     res.success = True
     return res
 
@@ -231,7 +237,7 @@ def get_next_random(state, fun, grad, antigrad_val, x):
     return x + antigrad_val * res.get_res()
 
 def get_next_wolfe(state, fun, grad, antigrad_val, x):
-    res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val, x)
+    res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val/10, x)
     return res.get_res()
 
 def create_grad_from_bad_func(fun, bad_func):
@@ -251,7 +257,7 @@ if __name__ == "__main__":
 
     for test_func in common.tests_function.functions_with_one_min:
         lim = test_func.lim
-        result = gradient_descent(test_func.function, create_grad_from_bad_func(test_func.function, symmetric_derivative), get_next_gold, get_stop_x_eps(0.01), np.array([lim[0]]))
+        result = gradient_descent(test_func.function, create_grad_from_bad_func(test_func.function, symmetric_derivative), get_next_wolfe, get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
@@ -262,7 +268,7 @@ if __name__ == "__main__":
     print("start functions with local min")
     for test_func in common.tests_function.functions_with_local_min:
         lim = test_func.lim
-        result = gradient_descent(test_func.function, test_func.gradient, get_next_gold, get_stop_x_eps(0.01), np.array([lim[0]]))
+        result = gradient_descent(test_func.function, test_func.gradient, get_next_wolfe, get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
             print("didn't solve")
