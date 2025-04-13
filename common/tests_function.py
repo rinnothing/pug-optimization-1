@@ -1,14 +1,15 @@
 import math
 
 from autograd import grad
+from autograd import hessian
 
 import autograd.numpy as np
-
 
 class test_function:
     def __init__(self, function, lim, point_min = None):
         self.function = function
         self.gradient = grad(function)
+        self.hessian = hessian(function)
         self.lim = lim
         self.point_min = np.array(point_min)
 
