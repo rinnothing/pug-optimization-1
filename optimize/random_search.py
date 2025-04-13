@@ -37,6 +37,12 @@ def random_search(fun, max_count_step=1000, stop=None, bounds=None):
         fun_new = fun(new_point)
         res.add_function_call()
         if fun_new == fun_last:
+            if abs(last_point - new_point) * 128 > min(last_point, new_point) - s + f - max(last_point, new_point):
+                s = min(last_point, new_point)
+                f = max(last_point, new_point)
+                res.add_guess(last_point)
+                res.add_history(np.array([s, f]))
+                continue
             res.add_guess(res.guesses[-1])
             res.add_history(res.history[-1])
             continue

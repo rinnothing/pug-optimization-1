@@ -12,7 +12,7 @@ import matplotlib.animation as animation
 import optimize.wolfe_conditions
 
 
-def gradient_descent(fun, grad, get_next, stop, x,  min_x = np.array([-100, -100]), max_x = np.array([100, 100]), min_count = 10, max_count = 100):
+def gradient_descent(fun, grad, get_next, stop, x,  min_x = np.array([-100, -100]), max_x = np.array([100, 100]), min_count = 1, max_count = 100):
     """
     makes gradient descent using given operators
     :param fun: is a function that we are optimizing
@@ -28,26 +28,28 @@ def gradient_descent(fun, grad, get_next, stop, x,  min_x = np.array([-100, -100
 
     # putting initial value as first guess
     res.add_guess(x)
-    save_min_value = [x, fun(x)]
     # doing steps until the end
     count = 0
     while (not stop(res) or min_count > count) and max_count > count:
         count+=1
         # calculate gradient
         antigrad_val = -1 * grad(x)
+        res.add_gradient_call()
         if np.linalg.norm(antigrad_val) == 0:
-            antigrad_val = 1/count
-        x = get_next(res, fun, grad, antigrad_val, x)
-        fun_x = fun(x)
-        if fun_x < save_min_value[1]:
-            save_min_value = [x, fun_x]
+            break
+
+        res_with_c = get_next(res, fun, grad, antigrad_val, x)
+        res.count_of_function_calls += res_with_c.count_call_func
+        res.count_of_gradient_calls += res_with_c.count_call_grad
+        x = res_with_c.res
+
         for i in range(len(x)):
             x[i] = min(x[i], max_x[i])
             x[i] = max(x[i], min_x[i])
 
         res.add_guess(x)
 
-    res.add_guess(save_min_value[0])
+    res.add_guess(res.guesses[-1])
     res.success = True
     return res
 
@@ -102,7 +104,7 @@ def get_constant_step(h_constant):
     """
 
     def step(state, fun, grad, antigrad_val, x):
-        return x + h_constant * antigrad_val
+        return common.res_and_count(x + h_constant * antigrad_val, 0, 0)
 
     return step
 
@@ -127,7 +129,7 @@ def get_partial_stuck_step(eps, h0, divisor=2.0):
             if dist < eps:
                 h /= divisor
 
-        return x + antigrad_val * h
+        return common.res_and_count(x + antigrad_val * h, 0, 0)
 
     return step
 
@@ -146,7 +148,7 @@ def get_exp_decay_step(h0, l):
         nonlocal h
 
         h *= inv_exp
-        return x + antigrad_val * h
+        return common.res_and_count(x + antigrad_val * h, 0, 0)
 
     return step
 
@@ -165,7 +167,7 @@ def get_pol_decay_step(h0, a, b):
         nonlocal k
 
         k += 1
-        return x + antigrad_val * h0 * np.power((b * k + 1), a)
+        return common.res_and_count(x + antigrad_val * h0 * np.power((b * k + 1), a), 0, 0)
 
     return step
 
@@ -182,7 +184,7 @@ def get_inv_root_step(h0):
         nonlocal k
 
         k += 1
-        return x + antigrad_val * h0 / np.sqrt(k + 1)
+        return common.res_and_count(x + antigrad_val * h0 / np.sqrt(k + 1), 0, 0)
 
     return step
 
@@ -227,22 +229,25 @@ def get_eps_stop_determiner(eps: float):
 def get_next_gold(state, fun, grad, antigrad_val, x):
     def func_for_gold(y):
         return fun(x + antigrad_val * y)
-    res = optimize.golden_search.golden_search(func_for_gold, stop=get_eps_stop_determiner(0.01), bounds=[0, 1])
-    return x + antigrad_val * res.get_res()
+    res = optimize.golden_search.golden_search(func_for_gold, max_count_step=100, stop=get_eps_stop_determiner(1e-7), bounds=[0, 1])
+    return common.res_and_count(x + antigrad_val * res.get_res(),
+                         res.count_of_function_calls, res.count_of_gradient_calls)
+
 
 def get_next_random(state, fun, grad, antigrad_val, x):
     def func_for_random(y):
         return fun(x + antigrad_val * y)
-    res = optimize.random_search.random_search(func_for_random, stop=get_eps_stop_determiner(0.01), bounds=[0, 1])
-    return x + antigrad_val * res.get_res()
+    res = optimize.random_search.random_search(func_for_random, max_count_step=100, stop=get_eps_stop_determiner(1e-7), bounds=[0, 1])
+    return common.res_and_count(x + antigrad_val * res.get_res(),
+                         res.count_of_function_calls, res.count_of_gradient_calls)
 
 def get_next_wolfe(state, fun, grad, antigrad_val, x):
-    res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val/10, x)
-    return res.get_res()
+    res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val, x)
+    return common.res_and_count(res.get_res(), res.count_of_function_calls, res.count_of_gradient_calls)
 
-def create_grad_from_bad_func(fun, bad_func, *args, **kwargs):
+def create_grad_from_bad_func(fun, bad_func):
     def grad(x):
-        return bad_func(fun, x, *args, **kwargs)
+        return bad_func(fun, x)
     return grad
 
 

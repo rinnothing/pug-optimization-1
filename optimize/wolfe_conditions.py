@@ -7,16 +7,21 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 1e-4, c2 = 0.9):
+def wolfe_conditions(fun, grad, step, x, max_count = 50, c1 = 1e-3, c2 = 0.9):
     res = common.StateResult()
     res.function = fun
-
+    res.add_guess(x)
+    last_save = step
     for i in range(1, max_count):
         new_x = x + step
         new_y = fun(new_x)
+        res.add_function_call()
         y = fun(x)
+        res.add_function_call()
         grad_x = grad(x)
+        res.add_gradient_call()
         grad_new = grad(new_x)
+        res.add_gradient_call()
         lower = new_y > y + c1 * np.dot(step, grad_x)
         curvature = np.sum(grad_new) <= np.sum(c2 * grad_x)
         res.add_guess(new_x)
@@ -26,10 +31,13 @@ def wolfe_conditions(fun, grad, step, x, max_count = 20, c1 = 1e-4, c2 = 0.9):
             return res
 
         if lower:
-            step = (1 - 0.5 ) * step
+            step = (1 - (0.5) ) * step
+            last_save = step
         else:
-            step = (1 + 1) * step
-
+            last_save = step
+            step = (1 + (1)) * step
+    new_x = x + last_save
+    res.add_guess(new_x)
     res.success = True
     return res
 
@@ -107,7 +115,7 @@ if __name__ == "__main__":
         return np.array([df_dx0, df_dx1])
     x2 = np.array([-1.5, 1.8])
     step2 = np.array([0.1, -0.5])
-    c1 = 1e-3
+    c1 = 1e-1
     c2 = 0.9
     lim_x = [-3, 3]
     lim_y = [-3, 3]

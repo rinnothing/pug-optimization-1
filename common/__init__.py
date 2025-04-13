@@ -6,6 +6,11 @@ from scipy.optimize import OptimizeResult
 def zero(x):
     return 0
 
+class res_and_count:
+    def __init__(self, res, count_call_func, count_call_grad):
+        self.res = res
+        self.count_call_func = count_call_func
+        self.count_call_grad = count_call_grad
 
 class StateResult(OptimizeResult):
     """
