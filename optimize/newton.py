@@ -2,6 +2,7 @@ import common
 import common.tests_function
 from gradient_descent import create_grad_from_bad_func, symmetric_derivative, get_next_wolfe, get_stop_x_eps, get_constant_step
 import optimize.general_visualiser as vis
+import optimize.gradient_descent as gr
 
 import numpy as np
 
@@ -29,7 +30,7 @@ def newton(fun, grad, hess, get_next, trust, stop, x, min_x=np.array([-100, -100
         to_optimize = lambda p: (grad_val * base_p) * p + (base_p / 2 * hess_val * base_p) * p * p
         local_grad = lambda p: grad_val + (hess_val * base_p) * p
         local_antigrad = -local_grad(0)
-        new_p = get_next(res, to_optimize, local_grad, local_antigrad, 0) * base_p
+        new_p = get_next(res, to_optimize, local_grad, local_antigrad, 0).res * base_p
 
         trust_val = trust(res)
         if trust_val is not None:
@@ -53,7 +54,7 @@ def newton(fun, grad, hess, get_next, trust, stop, x, min_x=np.array([-100, -100
 
 def get_real_const_step(h0):
     def get_next(state, fun, grad, antigrad_val, x):
-        return x + h0
+        return common.res_and_count(x + h0, 0, 0)
 
     return get_next
 
@@ -79,7 +80,7 @@ if __name__ == "__main__":
     for test_func in common.tests_function.functions_with_one_min:
         lim = test_func.lim
         result = newton(test_func.function, create_grad_from_bad_func(test_func.function, symmetric_derivative, delta=0.1),
-                        create_hess_from_bad_func(test_func.function, symmetric_derivative, delta=0.1), get_real_const_step(1),
+                        create_hess_from_bad_func(test_func.function, symmetric_derivative, delta=0.1), gr.get_next_gold,
                         get_const_trust(0.5), get_stop_x_eps(0.01), np.array([lim[0]]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         if not result.success:
