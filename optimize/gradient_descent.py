@@ -245,9 +245,9 @@ def get_next_wolfe(state, fun, grad, antigrad_val, x):
     res = optimize.wolfe_conditions.wolfe_conditions(fun, grad, antigrad_val, x)
     return common.res_and_count(res.get_res(), res.count_of_function_calls, res.count_of_gradient_calls)
 
-def create_grad_from_bad_func(fun, bad_func):
+def create_grad_from_bad_func(fun, bad_func, *args, **kwargs):
     def grad(x):
-        return bad_func(fun, x)
+        return bad_func(fun, x, *args, **kwargs)
     return grad
 
 
