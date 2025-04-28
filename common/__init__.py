@@ -7,10 +7,11 @@ def zero(x):
     return 0
 
 class res_and_count:
-    def __init__(self, res, count_call_func, count_call_grad):
+    def __init__(self, res, count_call_func, count_call_grad, count_call_hess = 0):
         self.res = res
         self.count_call_func = count_call_func
         self.count_call_grad = count_call_grad
+        self.count_call_hess = count_call_hess
 
 class StateResult(OptimizeResult):
     """
@@ -34,6 +35,7 @@ class StateResult(OptimizeResult):
         self.history: list = []
         self.count_of_function_calls: int = 0
         self.count_of_gradient_calls: int = 0
+        self.count_of_hessian_calls: int = 0
 
     def add_guess(self, guess):
         self.guesses.append(guess)
@@ -46,6 +48,9 @@ class StateResult(OptimizeResult):
 
     def add_gradient_call(self):
         self.count_of_gradient_calls += 1
+
+    def add_hessian_call(self):
+        self.count_of_hessian_calls += 1
 
     def get_res(self):
         if not self.success or len(self.guesses) == 0:

@@ -9,7 +9,17 @@ class test_function:
     def __init__(self, function, lim, point_min = None):
         self.function = function
         self.gradient = grad(function)
-        self.hessian = hessian(function)
+
+        # there's an error (or a strange feature) in pytorch that calculates one argument functions as (1, 1, 1) arrays
+        # this function addresses this issue by an explicit check
+        def fixed_hessian(x):
+            hess = hessian(function)(x)
+            if len(hess.shape) == 3:
+                return hess[0][0]
+
+            return hess
+
+        self.hessian = fixed_hessian
         self.lim = lim
         self.point_min = np.array(point_min)
 
