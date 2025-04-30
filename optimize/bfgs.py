@@ -2,7 +2,6 @@ import numpy as np
 import common
 import random
 import common.tests_function
-import autograd.numpy as anp  # Автоматическое дифференцирование
 from scipy.optimize import line_search
 import optimize.general_visualiser as vis
 import optimize.gradient_descent as gr
