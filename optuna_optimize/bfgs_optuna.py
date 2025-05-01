@@ -11,18 +11,18 @@ test_func = functions.functions_with_one_min_2d[numb_func]
 # Целевая функция для Optuna
 def objective(trial):
 
-    f_eps = trial.suggest_float("f_eps", 1e-6, 0.1)
-    c_1 = trial.suggest_float("wolfe_c1", 0, 0.05)
-    c_2 = trial.suggest_float("wolfe_c2", 0.7, 1)
-    max_count = trial.suggest_int("max_count", 10, 10000)
-    max_count_wolfe = trial.suggest_int("max_count_wolfe", 10, 100)
+    f_eps = trial.suggest_float("f_eps", 1e-9, 1e-8)
+    c_1 = trial.suggest_float("wolfe_c1", 0.001, 0.04)
+    c_2 = trial.suggest_float("wolfe_c2", 0.83, 0.95)
+    max_count = trial.suggest_int("max_count", 1000, 10000)
+    max_count_wolfe = trial.suggest_int("max_count_wolfe", 20, 100)
 
     lim = test_func.lim
     x = ((lim[1] - lim[0]) * 3) / 4  + lim[0]
     y = ((lim[1] - lim[0]) * 3) / 4  + lim[0]
     result = bfgs.bfgs(test_func.function, test_func.gradient,
                   partial(gr.get_next_wolfe, c1=c_1, c2=c_2, max_count = max_count_wolfe),
-                  gr.get_stop_f_eps(f_eps), np.array([x, y]), max_count = max_count)
+                  gr.get_stop_x_eps(f_eps), np.array([x, y]), max_count = max_count)
     return abs(test_func.function(result.get_res()) - test_func.function(test_func.point_min)) * (result.count_of_function_calls + result.count_of_gradient_calls + result.count_of_hessian_calls)
 
 

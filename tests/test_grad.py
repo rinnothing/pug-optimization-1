@@ -9,6 +9,7 @@ import common.tests_function
 import optimize.gradient_descent as gr
 import common.tests_function as test_fun
 import optimize.multidim_gradient as mgr
+from functools import partial
 import optimize.bfgs as bfgs
 # import optimize.newton as newton
 
@@ -59,7 +60,9 @@ class test_more_fun:
 # def run_func(fun, grad, get_next, stop = gr.get_stop_x_eps(1e-6), point = np.array([0, 0])):
 #     return gr.gradient_descent(fun, grad, get_next, stop, point, max_count=1000)
 def run_bfgs_func(fun, grad, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
-    return optimize.bfgs.bfgs(fun, grad, get_next, stop, point, max_count=1000)
+    return optimize.bfgs.bfgs(fun, grad,
+                  partial(gr.get_next_wolfe, c1=0.013, c2=0.887, max_count = 10),
+                  gr.get_stop_x_eps(1.5e-8), np.array([x, y]), max_count = 8000)
 # def run_newton_func(fun, grad, hess, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
 #     return optimize.newton.newton(fun, grad, hess, get_next, stop, point, max_count=1000)
 
@@ -170,6 +173,17 @@ for f in tests_fun_bfgs:
               f"	Время выполнения:	{f.time[i]:.4f}		секунд",
               "	Погрешность среднего:	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
               "	Погрешность главного:	", abs(f.min[i] - f.need_res[i]))
+print("---------------------")
+for f in tests_fun_bfgs:
+    for i in range(len(f.count)):
+        print(f.name, "	", i + 1, "	", f.predicts[i] / f.count[i],
+              "	",
+              f.starts[i] / f.count[i], "	",
+              f.starts_grad[i] / f.count[i], "	",
+              f.hess[i] / f.count[i], "	", f.min[i],
+              f"	{f.time[i]:.4f}",
+              "	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
+              "	", abs(f.min[i] - f.need_res[i]))
 
 '''TEST TO NEWTON'''
 # print(" ")

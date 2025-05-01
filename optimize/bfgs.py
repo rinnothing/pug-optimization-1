@@ -56,11 +56,11 @@ if __name__ == "__main__":
 
     for test_func in common.tests_function.functions_with_one_min_2d:
         lim = test_func.lim
-        x = random.uniform(lim[0], lim[1])
-        y = random.uniform(lim[0], lim[1])
+        x = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
+        y = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
         result = bfgs(test_func.function, test_func.gradient,
-                        partial(gr.get_next_wolfe, c1=0.025, c2=0.74, max_count = 50),
-                      gr.get_stop_f_eps(2e-5), np.array([x, y]))
+                        partial(gr.get_next_wolfe, c1=0.025, c2=0.84, max_count = 50),
+                      gr.get_stop_f_eps(3e-5), np.array([x, y]), max_count = 10000)
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         print("Count of gradient calls: ", result.count_of_gradient_calls, "Count of hessian calls: ",
               result.count_of_hessian_calls)
