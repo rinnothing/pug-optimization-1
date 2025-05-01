@@ -48,7 +48,10 @@ functions_with_one_min_2d: list = [
     test_function(lambda x: ((x[0] + 0.5) ** 2) / 10 + ((x[1] - 1.5) ** 2) / 10 - 3, [-100, 100], [-0.5, 1.5]),
     test_function(lambda x: ((x[0] + 0.5) ** 2) / 100 + ((x[1] - 1.5) ** 2) / 100 - 3, [-100, 100], [-0.5, 1.5]),
     test_function(lambda x: 5 * ((x[0] - math.sqrt(9)) ** 2) + ((x[1] + math.sqrt(7)) ** 2) / 5 + math.sqrt(3), [-100, 100], [math.sqrt(9), -math.sqrt(7)]),
+    test_function(lambda x: 1 / (x[0] ** 2 + x[1] ** 2 + 0.1) + x[0] ** 2 + x[1] ** 2 + x[1] / 10, [-5, 5], [0, -0.96282]),
+    test_function(lambda x: (x[0] - 0.5) ** 2 + (x[1] - 0.5) ** 2 - 10 / ((x[0] - 0.5) ** 2 + 1), [-5, 5], [0.5, 0.5])
 ]
+
 
 functions_with_local_min_2d: list = [
     test_function(

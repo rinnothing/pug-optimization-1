@@ -8,7 +8,7 @@ import optimize.gradient_descent as gr
 import optimize.multidim_gradient as mul_gr
 
 
-def bfgs(fun, grad, get_next, stop, x, max_count=100, min_count = 10, tol=1e-6):
+def bfgs(fun, grad, get_next, stop, x, max_count=1000, min_count = 10):
 
     res = common.StateResult()
     res.function = fun
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         y = random.uniform(lim[0], lim[1])
         result = bfgs(test_func.function, test_func.gradient,
                         gr.get_next_wolfe,
-                      gr.get_stop_f_eps(0.01), np.array([x, y]))
+                      gr.get_stop_f_eps(1e-6), np.array([x, y]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         print("Count of gradient calls: ", result.count_of_gradient_calls, "Count of hessian calls: ",
               result.count_of_hessian_calls)
