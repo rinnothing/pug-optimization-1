@@ -57,10 +57,7 @@ def symmetric_derivative(fun, x, delta=1.0):
     """
     return a_b_derivative(fun, x, delta, delta)
 
-
-# visualiser
-
-def visualiser_2d(state: common.StateResult, lim_x, lim_y):
+def visualiser_2d(state, lim_x, lim_y):
     X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
     Z = state.function([X, Y])
 
@@ -68,27 +65,70 @@ def visualiser_2d(state: common.StateResult, lim_x, lim_y):
     contour = ax.contourf(X, Y, Z, levels=20, cmap='viridis', alpha=0.7)
     plt.colorbar(contour, label='f(x, y)')
 
-    x = state.guesses[0]
-    arrow = matplotlib.patches.Arrow(x[0], x[1], state.guesses[0][0] - x[0], state.guesses[0][1] - x[1], width=0.5,
-                                     color="red")
-    ax.add_patch(arrow)
+    guesses = np.array(state.guesses)
+
+    line, = ax.plot([], [], 'r-', linewidth=2)
+    trail, = ax.plot([], [], 'ro', markersize=3)
+    point, = ax.plot([], [], 'ro', markersize=6)
+
+    ax.set_xlim(lim_x)
+    ax.set_ylim(lim_y)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
 
     def animate(i):
-        arrow.set_data(state.guesses[i][0], state.guesses[i][1],
-                       state.guesses[i + 1][0] - state.guesses[i][0], state.guesses[i + 1][1] - state.guesses[i][1])
-        return arrow
+        line.set_data(guesses[:i+1, 0], guesses[:i+1, 1])
+        trail.set_data(guesses[:i+1, 0], guesses[:i+1, 1])
+        point.set_data([guesses[i, 0]], [guesses[i, 1]])
+        return line, trail, point
 
     ani = animation.FuncAnimation(
         fig,
         animate,
-        frames=len(state.guesses) - 1,
-        repeat=True,
-        interval=100
+        frames=len(guesses),
+        interval=200,
+        repeat=True
     )
-    plt.show()
 
+    plt.show()
+def visualiser_2d_in(state, lim_x, lim_y, index=0):
+    X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
+    Z = state.function([X, Y])
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    contour = ax.contourf(X, Y, Z, levels=20, cmap='viridis', alpha=0.7)
+    plt.colorbar(contour, label='f(x, y)')
+
+    guesses = np.array(state.guesses)
+
+    line, = ax.plot([], [], 'r-', linewidth=2)
+    trail, = ax.plot([], [], 'ro', markersize=3)
+    point, = ax.plot([], [], 'ro', markersize=6)
+
+    ax.set_xlim(lim_x)
+    ax.set_ylim(lim_y)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+
+    def animate(i):
+        line.set_data(guesses[:i+1, 0], guesses[:i+1, 1])
+        trail.set_data(guesses[:i+1, 0], guesses[:i+1, 1])
+        point.set_data([guesses[i, 0]], [guesses[i, 1]])
+        return line, trail, point
+
+    ani = animation.FuncAnimation(
+        fig,
+        animate,
+        frames=len(guesses),
+        interval=200,
+        repeat=False
+    )
+
+    animate(len(guesses) - 1)
+    save_path = f"visual_2d_{index}.png"
+    plt.savefig(save_path, dpi=300)
+    plt.show()
+    plt.close(fig)
 
 # maybe will add other later
 def visualiser_3d(state: common.StateResult, lim_x, lim_y):
@@ -109,13 +149,43 @@ def visualiser_3d(state: common.StateResult, lim_x, lim_y):
         point.set_data_3d([guesses[i, 0]], [guesses[i, 1]], [state.function(guesses[i])])
         return point,
 
-    ani = animation.FuncAnimation(fig, animate, frames=len(state.guesses), interval=100, blit=True)
+    ani = animation.FuncAnimation(fig, animate, frames=len(state.guesses), interval=100, blit=True, repeat=True)
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('f(X, Y)')
 
     plt.show()
+
+def visualiser_3d_in(state: common.StateResult, lim_x, lim_y, index):
+    X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 100), np.linspace(lim_y[0], lim_y[1], 100))
+    Z = state.function([X, Y])
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(X, Y, Z, cmap='viridis', alpha=0.6)
+
+    guesses = np.array(state.guesses)
+    ax.plot(guesses[:, 0], guesses[:, 1], state.function(guesses.T), 'ro-', markersize=5)
+
+    point, = ax.plot([], [], [], 'bo', markersize=8)
+
+    def animate(i):
+        point.set_data_3d([guesses[i, 0]], [guesses[i, 1]], [state.function(guesses[i])])
+        return point,
+
+    ani = animation.FuncAnimation(fig, animate, frames=len(state.guesses), interval=100, blit=True, repeat=False)
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('f(X, Y)')
+
+    animate(len(guesses) - 1)
+    save_path = f"visual_3d_{index}.png"
+    plt.savefig(save_path, dpi=300)
+    plt.show()
+    plt.close(fig)
 
 if __name__ == "__main__":
     for test_func in test_f.functions_with_one_min_2d:
@@ -129,5 +199,5 @@ if __name__ == "__main__":
             print(result.get_res(), len(result.guesses))
             print(result.guesses)
             print(result.history)
-            visualiser_2d(result, lim_x=lim, lim_y=lim)
-            visualiser_3d(result, lim_x=lim, lim_y=lim)
+            # visualiser_2d(result, lim_x=lim, lim_y=lim)
+            # visualiser_3d(result, lim_x=lim, lim_y=lim)
