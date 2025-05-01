@@ -207,8 +207,8 @@ def visualiser_2d_2_on1(state1, state2, lim_x, lim_y, index):
     contour1 = ax.contourf(X, Y, Z1, levels=20, cmap='viridis', alpha=0.7, zorder=0)
     contour2 = ax.contourf(X, Y, Z2, levels=20, cmap='plasma', alpha=0.3, zorder=1)
 
-    plt.colorbar(contour1, ax=ax, label='f1(x, y)')
-    plt.colorbar(contour2, ax=ax, label='f2(x, y)')
+    plt.colorbar(contour1, ax=ax)
+
 
     guesses1 = np.array(state1.guesses)
     guesses2 = np.array(state2.guesses)
