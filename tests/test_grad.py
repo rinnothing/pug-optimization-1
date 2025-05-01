@@ -11,7 +11,7 @@ import common.tests_function as test_fun
 import optimize.multidim_gradient as mgr
 from functools import partial
 import optimize.bfgs as bfgs
-# import optimize.newton as newton
+import optimize.newton as nt
 
 
 class test_more_fun:
@@ -68,8 +68,8 @@ def run_bfgs_func_2(fun, grad, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.
     return optimize.bfgs.bfgs(fun, grad,
                   gr.get_next_wolfe,
                   gr.get_stop_f_eps(1e-6), np.array([x, y]), max_count = 10000)
-# def run_newton_func(fun, grad, hess, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
-#     return optimize.newton.newton(fun, grad, hess, get_next, stop, point, max_count=1000)
+def run_newton_func(fun, grad, hess, get_next, trust, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
+    return nt.newton(fun, grad, hess, get_next, trust, stop, point, max_count=1000)
 
 
 def default_grad(fun):
@@ -137,75 +137,25 @@ tests_fun = [
 #               "	Погрешность среднего:	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
 #               "	Погрешность главного:	", abs(f.min[i] - f.need_res[i]))
 
-'''TEST TO BFGS'''
-print(" ")
-print("Test 2d with local min")
-count2 = 4
-count3 = 0
-for t_fun in test_fun.functions_with_one_min_2d:
-    lim = t_fun.lim
-    count2 -= 1
-    count3 += 1
-    print(count2)
-    for f in tests_fun_bfgs:
-        f.add_new_tests(1, t_fun.function(t_fun.point_min))
-    for _ in range(1):
-        x = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
-        y = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
-        for f in tests_fun_bfgs:
-            start_time = time.time()
-            res = run_bfgs_func(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
-            res2 = run_bfgs_func_2(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
-            end_time = time.time()
-            f.add_in_last_starts(res.count_of_function_calls)
-            f.add_in_last_starts_grad(res.count_of_gradient_calls)
-            f.add_in_last_starts_hess(res.count_of_hessian_calls)
-            f.add_in_last_predicate(t_fun.function(res.get_res()))
-            f.add_in_last_time(end_time - start_time)
-            f.add_in_last_min(t_fun.function(res.get_res()))
-            mgr.visualiser_2d_2_on1(res, res2, lim_x=lim, lim_y=lim, index = count3)
-            mgr.visualiser_3d_2_on_1(res, res2, lim_x=lim, lim_y=lim, index = count3)
-
-print(count2)
-for f in tests_fun:
-    print()
-    for i in range(len(f.count)):
-        print(f.name, "		func numb:	", i + 1, "		sum_min_value:	", f.predicts[i] / f.count[i],
-              "	count iteration:	",
-              f.starts[i] / f.count[i], "	count iteration grad:	",
-              f.starts_grad[i] / f.count[i], "	count iteration hess:	",
-              f.hess[i] / f.count[i], "	Главный минимум:	", f.min[i],
-              f"	Время выполнения:	{f.time[i]:.4f}		секунд",
-              "	Погрешность среднего:	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
-              "	Погрешность главного:	", abs(f.min[i] - f.need_res[i]))
-print("---------------------")
-for f in tests_fun:
-    for i in range(len(f.count)):
-        print(f.name, "	", i + 1, "	", f.predicts[i] / f.count[i],
-              "	",
-              f.starts[i] / f.count[i], "	",
-              f.starts_grad[i] / f.count[i], "	",
-              f.hess[i] / f.count[i], "	", f.min[i],
-              f"	{f.time[i]:.4f}",
-              "	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
-              "	", abs(f.min[i] - f.need_res[i]))
-
-'''TEST TO NEWTON'''
+# '''TEST TO BFGS'''
 # print(" ")
 # print("Test 2d with local min")
 # count2 = 4
+# count3 = 0
 # for t_fun in test_fun.functions_with_one_min_2d:
 #     lim = t_fun.lim
 #     count2 -= 1
+#     count3 += 1
 #     print(count2)
-#     for f in tests_fun:
+#     for f in tests_fun_bfgs:
 #         f.add_new_tests(1, t_fun.function(t_fun.point_min))
 #     for _ in range(1):
 #         x = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
 #         y = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
-#         for f in tests_fun:
+#         for f in tests_fun_bfgs:
 #             start_time = time.time()
-#             res = run_newton_func(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
+#             res = run_bfgs_func_2(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
+#             res2 = run_bfgs_func_2(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
 #             end_time = time.time()
 #             f.add_in_last_starts(res.count_of_function_calls)
 #             f.add_in_last_starts_grad(res.count_of_gradient_calls)
@@ -213,8 +163,8 @@ for f in tests_fun:
 #             f.add_in_last_predicate(t_fun.function(res.get_res()))
 #             f.add_in_last_time(end_time - start_time)
 #             f.add_in_last_min(t_fun.function(res.get_res()))
-#             # mgr.visualiser_2d(res, lim_x=lim, lim_y=lim)
-#             # mgr.visualiser_3d(res, lim_x=lim, lim_y=lim)
+#             # mgr.visualiser_2d_2_on1(res, res2, lim_x=lim, lim_y=lim, index = count3)
+#             # mgr.visualiser_3d_2_on_1(res, res2, lim_x=lim, lim_y=lim, index = count3)
 #
 # print(count2)
 # for f in tests_fun:
@@ -228,6 +178,58 @@ for f in tests_fun:
 #               f"	Время выполнения:	{f.time[i]:.4f}		секунд",
 #               "	Погрешность среднего:	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
 #               "	Погрешность главного:	", abs(f.min[i] - f.need_res[i]))
+# print("---------------------")
+# for f in tests_fun:
+#     for i in range(len(f.count)):
+#         print(f.name, "	", i + 1, "	", f.predicts[i] / f.count[i],
+#               "	",
+#               f.starts[i] / f.count[i], "	",
+#               f.starts_grad[i] / f.count[i], "	",
+#               f.hess[i] / f.count[i], "	", f.min[i],
+#               f"	{f.time[i]:.4f}",
+#               "	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
+#               "	", abs(f.min[i] - f.need_res[i]))
+
+'''TEST TO NEWTON'''
+print(" ")
+print("Test 2d with local min")
+count2 = 4
+count3 = 0
+for t_fun in test_fun.functions_with_one_min_2d:
+    lim = t_fun.lim
+    count2 -= 1
+    count3 += 1
+    print(count2)
+    for f in tests_fun_newton:
+        f.add_new_tests(1, t_fun.function(t_fun.point_min))
+    for _ in range(1):
+        x = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
+        y = ((lim[1] - lim[0]) * 3) / 4 + lim[0]
+        for f in tests_fun_newton:
+            start_time = time.time()
+            res = run_newton_func(t_fun.function, f.grad(t_fun), t_fun.hessian, f.function, nt.get_const_trust(None), point=np.array([x, y]))
+            end_time = time.time()
+            f.add_in_last_starts(res.count_of_function_calls)
+            f.add_in_last_starts_grad(res.count_of_gradient_calls)
+            f.add_in_last_starts_hess(res.count_of_hessian_calls)
+            f.add_in_last_predicate(t_fun.function(res.get_res()))
+            f.add_in_last_time(end_time - start_time)
+            f.add_in_last_min(t_fun.function(res.get_res()))
+            mgr.visualiser_2d(res, lim_x=lim, lim_y=lim)
+            mgr.visualiser_3d(res, lim_x=lim, lim_y=lim)
+
+print(count2)
+for f in tests_fun_newton:
+    print()
+    for i in range(len(f.count)):
+        print(f.name, "		func numb:	", i + 1, "		sum_min_value:	", f.predicts[i] / f.count[i],
+              "	count iteration:	",
+              f.starts[i] / f.count[i], "	count iteration grad:	",
+              f.starts_grad[i] / f.count[i], "	count iteration hess:	",
+              f.hess[i] / f.count[i], "	Главный минимум:	", f.min[i],
+              f"	Время выполнения:	{f.time[i]:.4f}		секунд",
+              "	Погрешность среднего:	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
+              "	Погрешность главного:	", abs(f.min[i] - f.need_res[i]))
 """
 
 for f in tests_fun:
