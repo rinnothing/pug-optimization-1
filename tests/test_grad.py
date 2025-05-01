@@ -57,12 +57,17 @@ class test_more_fun:
         self.count.append(count)
 
 
-# def run_func(fun, grad, get_next, stop = gr.get_stop_x_eps(1e-6), point = np.array([0, 0])):
-#     return gr.gradient_descent(fun, grad, get_next, stop, point, max_count=1000)
+def run_func(fun, grad, get_next, stop = gr.get_stop_f_eps(1e-6), point = np.array([0, 0])):
+    return gr.gradient_descent(fun, grad, get_next, stop, point, max_count=10000)
+
 def run_bfgs_func(fun, grad, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
     return optimize.bfgs.bfgs(fun, grad,
                   partial(gr.get_next_wolfe, c1=0.013, c2=0.887, max_count = 10),
                   gr.get_stop_x_eps(1.5e-8), np.array([x, y]), max_count = 8000)
+def run_bfgs_func_2(fun, grad, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
+    return optimize.bfgs.bfgs(fun, grad,
+                  gr.get_next_wolfe,
+                  gr.get_stop_f_eps(1e-6), np.array([x, y]), max_count = 10000)
 # def run_newton_func(fun, grad, hess, get_next, stop=gr.get_stop_x_eps(1e-6), point=np.array([0, 0])):
 #     return optimize.newton.newton(fun, grad, hess, get_next, stop, point, max_count=1000)
 
@@ -91,10 +96,7 @@ tests_fun_newton = [
 ]
 
 tests_fun = [
-    test_more_fun("gol_def", gr.get_next_gold, default_grad),
-    test_more_fun("ran_def", gr.get_next_random, default_grad),
     test_more_fun("wol_def", gr.get_next_wolfe, default_grad),
-    test_more_fun("con_def_1", gr.get_constant_step(0.1), default_grad),
 ]
 '''TEST TO STANDART'''
 # gh= 0
@@ -139,9 +141,11 @@ tests_fun = [
 print(" ")
 print("Test 2d with local min")
 count2 = 4
+count3 = 0
 for t_fun in test_fun.functions_with_one_min_2d:
     lim = t_fun.lim
     count2 -= 1
+    count3 += 1
     print(count2)
     for f in tests_fun_bfgs:
         f.add_new_tests(1, t_fun.function(t_fun.point_min))
@@ -151,6 +155,7 @@ for t_fun in test_fun.functions_with_one_min_2d:
         for f in tests_fun_bfgs:
             start_time = time.time()
             res = run_bfgs_func(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
+            res2 = run_bfgs_func_2(t_fun.function, f.grad(t_fun), f.function, point=np.array([x, y]))
             end_time = time.time()
             f.add_in_last_starts(res.count_of_function_calls)
             f.add_in_last_starts_grad(res.count_of_gradient_calls)
@@ -158,11 +163,11 @@ for t_fun in test_fun.functions_with_one_min_2d:
             f.add_in_last_predicate(t_fun.function(res.get_res()))
             f.add_in_last_time(end_time - start_time)
             f.add_in_last_min(t_fun.function(res.get_res()))
-            mgr.visualiser_2d(res, lim_x=lim, lim_y=lim)
-            mgr.visualiser_3d(res, lim_x=lim, lim_y=lim)
+            mgr.visualiser_2d_2_on1(res, res2, lim_x=lim, lim_y=lim, index = count3)
+            mgr.visualiser_3d_2_on_1(res, res2, lim_x=lim, lim_y=lim, index = count3)
 
 print(count2)
-for f in tests_fun_bfgs:
+for f in tests_fun:
     print()
     for i in range(len(f.count)):
         print(f.name, "		func numb:	", i + 1, "		sum_min_value:	", f.predicts[i] / f.count[i],
@@ -174,7 +179,7 @@ for f in tests_fun_bfgs:
               "	Погрешность среднего:	", abs(f.predicts[i] / f.count[i] - f.need_res[i]),
               "	Погрешность главного:	", abs(f.min[i] - f.need_res[i]))
 print("---------------------")
-for f in tests_fun_bfgs:
+for f in tests_fun:
     for i in range(len(f.count)):
         print(f.name, "	", i + 1, "	", f.predicts[i] / f.count[i],
               "	",
