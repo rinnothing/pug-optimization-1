@@ -1,52 +1,32 @@
+import optuna
 from functools import partial
-
-import optimize.newton as newton
-import common
-import common.tests_function
+import numpy as np
+import optimize.newton as nt
+import common.tests_function as functions
 import optimize.gradient_descent as gr
 
-import optuna
-import numpy as np
+numb_func = 5
+test_func = functions.functions_with_one_min_2d[numb_func]
 
-import random
+# Целевая функция для Optuna
+def objective(trial):
 
-def to_optimize(trial):
-    val_sum = 0
+    f_eps = trial.suggest_float("f_eps", 1e-9, 1e-8)
+    c_1 = trial.suggest_float("wolfe_c1", 0.43, 0.6)
+    c_2 = trial.suggest_float("wolfe_c2", 0.87, 0.96)
+    max_count = trial.suggest_int("max_count", 1000, 10000)
 
-    trust = trial.suggest_float("trust_period", 0, 100)
-    f_eps = trial.suggest_float("f_eps", 0, 0.1)
-    c_1 = trial.suggest_float("wolfe_c1", 0, 0.05)
-    c_2 = trial.suggest_float("wolfe_c2", 0, 0.8)
+    lim = test_func.lim
+    x = ((lim[1] - lim[0]) * 3) / 4  + lim[0]
+    y = ((lim[1] - lim[0]) * 3) / 4  + lim[0]
+    result = nt.newton(test_func.function, test_func.gradient, test_func.hessian, partial(gr.get_next_wolfe, c1=c_1, c2=c_2, max_count = 10), nt.get_const_trust(None),gr.get_stop_x_eps(f_eps), np.array([x, y]), max_count = max_count)
+    return abs(test_func.function(result.get_res()) - test_func.function(test_func.point_min)) * (result.count_of_function_calls + result.count_of_gradient_calls + result.count_of_hessian_calls)
 
-    for test_func in common.tests_function.functions_with_one_min:
-        lim = test_func.lim
-        result = newton.newton(test_func.function, test_func.gradient,
-                        test_func.hessian, partial(gr.get_next_wolfe, c1=c_1, c2=c_2),
-                        newton.get_const_trust(trust), gr.get_stop_f_eps(f_eps), np.array([lim[0]]))
-        val_sum += test_func.function(result.get_res())
 
-    for test_func in common.tests_function.functions_with_local_min:
-        lim = test_func.lim
-        result = newton.newton(test_func.function, test_func.gradient,
-                        test_func.hessian, partial(gr.get_next_wolfe, c1=c_1, c2=c_2),
-                        newton.get_const_trust(trust), gr.get_stop_f_eps(f_eps), np.array([lim[0]]))
-        val_sum += test_func.function(result.get_res())
+# Исследование
+study = optuna.create_study()
+study.optimize(objective, n_trials=100)
 
-    for test_func in common.tests_function.functions_with_one_min_2d:
-        lim = test_func.lim
-        x = random.uniform(lim[0], lim[1])
-        y = random.uniform(lim[0], lim[1])
-        result = newton.newton(test_func.function, test_func.gradient,
-                        test_func.hessian, partial(gr.get_next_wolfe, c1=c_1, c2=c_2),
-                        newton.get_const_trust(trust), gr.get_stop_f_eps(f_eps), np.array([x, y]))
-        val_sum += test_func.function(result.get_res())
-
-    # just returning the sum of all answers
-    return val_sum
-
-if __name__ == "__main__":
-    study = optuna.create_study()
-    study.optimize(to_optimize, n_trials=100)
-
-    best_params = study.best_params
-    print("best params: ", best_params)
+# Результаты
+print("Лучшие параметры:", study.best_params)
+print("Лучшее значение функции:", study.best_value)

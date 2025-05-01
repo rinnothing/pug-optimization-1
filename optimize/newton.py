@@ -10,7 +10,7 @@ from numpy.linalg import norm
 
 
 def newton(fun, grad, hess, get_next, trust, stop, x, min_x=np.array([-100, -100]), max_x=np.array([100, 100]),
-           min_count=10,
+           min_count=1,
            max_count=100):
     res = common.StateResult()
     res.function = fun
