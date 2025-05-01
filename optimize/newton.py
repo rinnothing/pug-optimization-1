@@ -32,21 +32,18 @@ def newton(fun, grad, hess, get_next, trust, stop, x, min_x=np.array([-100, -100
             inv_hess_val = np.array([1.0 / hess_val[0]])
         base_p = np.dot(-inv_hess_val, np.matrix.transpose(grad_val))
 
-        to_optimize = lambda p: np.dot(grad_val, base_p) * p + np.dot(
-            np.dot(base_p, hess_val), base_p) / 2 * p * p
-        local_grad = lambda p: np.dot(grad_val, base_p) + np.dot(
-            np.dot(base_p, hess_val), base_p) * p
-        local_antigrad = -local_grad(0)
-        preres = get_next(res, to_optimize, local_grad, local_antigrad, 0)
+        preres = get_next(res, fun, grad, base_p, x)
         res.count_of_function_calls += preres.count_call_func
         res.count_of_gradient_calls += preres.count_call_grad
         res.count_of_hessian_calls += preres.count_call_hess
-        new_p = preres.res * base_p
+
+        p = preres.res - x
 
         trust_val = trust(res)
-        if trust_val is not None:
-            new_p = min(norm(new_p), trust_val)
-        x = x + base_p * new_p
+        if trust_val is not None and norm(p) != 0:
+            length = norm(p)
+            p = min(length, trust_val) * (p / length)
+        x = x + p
 
         fun_x = fun(x)
         if fun_x < save_min_value[1]:
@@ -91,43 +88,13 @@ def create_hess_from_bad_func(fun, bad_func, *args, **kwargs):
 
 
 if __name__ == "__main__":
-    for test_func in common.tests_function.functions_with_one_min:
-        lim = test_func.lim
-        result = newton(test_func.function, test_func.gradient,
-                        test_func.hessian, gr.get_next_wolfe,
-                        get_const_trust(0.5), gr.get_stop_f_eps(0.01), np.array([lim[0]]))
-        print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
-        print("Count of gradient calls: ", result.count_of_gradient_calls, "Count of hessian calls: ",
-              result.count_of_hessian_calls)
-        if not result.success:
-            print("didn't solve")
-        new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
-        new_lim[0] = min(new_lim[0], result.get_res() - 1)
-        new_lim[1] = max(new_lim[1], result.get_res() + 1)
-        vis.visualiser(result, new_lim, 500)
-    print("start functions with local min")
-    for test_func in common.tests_function.functions_with_local_min:
-        lim = test_func.lim
-        result = newton(test_func.function, test_func.gradient,
-                        test_func.hessian, gr.get_next_wolfe,
-                        get_const_trust(0.5), gr.get_stop_f_eps(0.01), np.array([lim[0]]))
-        print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
-        print("Count of gradient calls: ", result.count_of_gradient_calls, "Count of hessian calls: ",
-              result.count_of_hessian_calls)
-        if not result.success:
-            print("didn't solve")
-        new_lim = np.array([lim[0] - lim[1] + lim[0], lim[1]])
-        new_lim[0] = min(new_lim[0], result.get_res() - 1)
-        new_lim[1] = max(new_lim[1], result.get_res() + 1)
-        vis.visualiser(result, new_lim, 500)
-
     for test_func in common.tests_function.functions_with_one_min_2d:
         lim = test_func.lim
         x = random.uniform(lim[0], lim[1])
         y = random.uniform(lim[0], lim[1])
         result = newton(test_func.function, test_func.gradient,
                         test_func.hessian, gr.get_next_wolfe,
-                        get_const_trust(0.5), gr.get_stop_f_eps(0.01), np.array([x, y]))
+                        get_const_trust(None), gr.get_stop_f_eps(1e-6), np.array([x, y]))
         print("Count of function calls: ", result.count_of_function_calls, " | result: ", result.get_res())
         print("Count of gradient calls: ", result.count_of_gradient_calls, "Count of hessian calls: ",
               result.count_of_hessian_calls)
