@@ -1,7 +1,6 @@
 import random
 import common
 import common.tests_function
-from gradient_descent import create_grad_from_bad_func, symmetric_derivative
 import optimize.general_visualiser as vis
 import optimize.gradient_descent as gr
 import optimize.multidim_gradient as mul_gr
