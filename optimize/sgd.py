@@ -1,11 +1,15 @@
 import random
 
 import numpy as np
+from sklearn.model_selection import train_test_split
+from ucimlrepo import fetch_ucirepo
 
 import common
+import optimize.gradient_descent as gr
+
 
 class SGDLearn:
-    def __init__(self, w_0, loss, loss_der, stop, get_next, batch = 0):
+    def __init__(self, w_0, loss, loss_der, stop, get_next, batch=0):
         self.loss = loss
         self.loss_der = loss_der
         self.stop = stop
@@ -59,6 +63,7 @@ class SGDLearn:
         res.success = True
         return res
 
+
 def get_n_random(n, sz):
     if n > sz:
         return
@@ -71,11 +76,14 @@ def get_n_random(n, sz):
 
     return already_used.keys()
 
+
 def regularize_l1(loss, loss_der, l1):
     return regularize_elastic(loss, loss_der, l1, 0)
 
+
 def regularize_l2(loss, loss_der, l2):
     return regularize_elastic(loss, loss_der, 0, l2)
+
 
 def regularize_elastic(loss, loss_der, l1, l2):
     def local_loss_fun(weights, x, y):
@@ -104,6 +112,7 @@ def regularize_elastic(loss, loss_der, l1, l2):
 
     return local_loss_fun, local_loss_der
 
+
 def square_loss(a, a_der):
     def local_loss_fun(weights, x, y):
         return np.square(a(x, weights) - y)
@@ -112,6 +121,7 @@ def square_loss(a, a_der):
         return 2 * (a(x, weights) - y) * a_der(x, weights)
 
     return local_loss_fun, local_loss_der
+
 
 # I don't know why I implemented this
 def sigmoid_loss(a, a_der):
@@ -132,3 +142,19 @@ def sigmoid_loss(a, a_der):
         return -val
 
     return local_loss_fun, local_loss_der
+
+
+if __name__ == "__main__":
+    # fetch dataset
+    wine_quality = fetch_ucirepo(id=186)
+
+    # data (as pandas dataframes)
+    X = wine_quality.data.features
+    y = wine_quality.data.targets
+
+    # just some initial weights (better use random, but I didn't find the way)
+    weights_0 = np.ones_like(wine_quality.data.features[0])
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(lambda x, w: np.dot(x, w), lambda x, w: w), 0.1, 0.2),
+                     gr.get_stop_f_eps(0.1), gr.get_next_wolfe, 10)
