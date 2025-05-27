@@ -28,27 +28,32 @@ class SGDLearn:
         while (not self.stop(res) or min_count > count) and max_count > count:
             if self.batch != 0:
                 ran = get_n_random(self.batch, len(x))
+                size = self.batch
             else:
-                ran = range(0, self.batch)
+                ran = range(0, len(x))
+                size = len(x)
 
             grad = 0
             for n in ran:
                 # just like a normal derivative
                 grad += self.loss_der(self.weights, x[n], y[n])
+            grad /= size
 
             def optim_fun(val):
                 # I don't know, maybe it's better to call it for every value
                 ans = 0
                 for n in ran:
-                    ans += self.loss(self.weights, x[n], y[n])
+                    ans += self.loss(val, x[n], y[n])
+                ans /= size
 
                 return ans
 
             def optim_der(val):
-                # the same us upper
+                # the same as upper
                 ans = 0
                 for n in ran:
-                    ans += self.loss_der(self.weights, x[n], y[n])
+                    ans += self.loss_der(val, x[n], y[n])
+                ans /= size
 
                 return ans
 
@@ -72,7 +77,7 @@ def get_n_random(n, sz):
 
     already_used = dict()
     while len(already_used) < n:
-        gen = random.randint(0, n)
+        gen = random.randint(0, sz-1)
         if gen not in already_used:
             already_used[gen] = True
 
@@ -147,23 +152,39 @@ def sigmoid_loss(a, a_der):
 
 
 if __name__ == "__main__":
-    # fetch dataset
-    # dataset = fetch_ucirepo(id=186)
-    dataset = pandas.read_csv("../dataset/electricity/ex_1.csv")
+    # # # fetch dataset
+    # dataset = pandas.read_csv("../dataset/electricity/ex_1.csv")
+    # #
+    # # # data (as pandas dataframes)
+    # X = dataset[['time', 'input_voltage']].to_numpy()
+    # y = dataset['el_power'].to_numpy()
 
-    # data (as pandas dataframes)
-    # X = dataset.data.features.to_numpy()
-    # y = dataset.data.targets.to_numpy()
-    X = dataset[['time', 'input_voltage']].to_numpy()
-    y = dataset['el_power'].to_numpy()
+    X = [[x, x] for x in range(1, 1000)]
+    y = [5 + 3 * x ** 2 for x in range(1, 1000)]
 
     # just some initial weights (better use random, but I didn't find the way)
-    weights_0 = np.ones_like(X[0])
+    weights_0 = np.array([1, 1, 0.00001, 1, 1, 0.00001])
 
-    a = lambda x, w: np.dot(x, w)
-    a_der = lambda x, w: w
+    # trying to align using second order curve
+    a = lambda x, w: np.array([w[0] + x[0] * w[1] + x[0] ** 2 * w[2] +
+                              w[3] + x[1] * w[4] + x[1] ** 2 * w[5]])
+    a_der = lambda x, w: np.array([1, x[0], x[0] ** 2, 1, x[1], x[1] ** 2])
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(a, a_der), 0.1, 0.2),
-                     gr.get_stop_x_eps(0.1), gr.get_next_wolfe, 10)
-    model.fit(X_train, y_train)
+    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(a, a_der), 0, 0),
+                     gr.get_stop_x_eps(0.1), gr.get_constant_step(0.000001), 10)
+    model.fit(X_train, y_train, min_count=500, max_count=1000)
+
+    average_train = 0
+    for point, val in zip(X_train, y_train):
+        average_train += (a(point, model.weights) - val) ** 2
+    average_train /= len(X_train)
+    print("average train deviation: %s" % average_train)
+
+    average_test = 0
+    for point, val in zip(X_test, y_test):
+        average_test += (a(point, model.weights) - val) ** 2
+    average_test /= len(X_test)
+    print("average test deviation: %s" % average_test)
+
+    print("weights: ", model.weights)
