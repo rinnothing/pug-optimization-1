@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+import pandas
 from sklearn.model_selection import train_test_split
 from ucimlrepo import fetch_ucirepo
 
@@ -58,6 +59,7 @@ class SGDLearn:
 
             self.weights = preres.res
             res.add_guess(self.weights)
+            count += 1
 
         res.add_guess(self.weights)
         res.success = True
@@ -89,10 +91,10 @@ def regularize_elastic(loss, loss_der, l1, l2):
     def local_loss_fun(weights, x, y):
         loss_val = loss(weights, x, y)
         if l1 != 0:
-            loss_val += l1 * np.abs(weights)
+            loss_val += l1 * np.sum(np.abs(weights))
 
         if l2 != 0:
-            loss_val += l2 * np.square(weights)
+            loss_val += l2 * np.sum(np.square(weights))
 
         return loss_val
 
@@ -103,10 +105,10 @@ def regularize_elastic(loss, loss_der, l1, l2):
             arr[arr > 0] = 1
             arr[arr < 0] = -1
 
-            loss_val += l1 * arr
+            loss_val += l1 * np.sum(arr)
 
         if l2 != 0:
-            loss_val += l2 * weights * 2
+            loss_val += l2 * np.sum(weights) * 2
 
         return loss_val
 
@@ -146,15 +148,22 @@ def sigmoid_loss(a, a_der):
 
 if __name__ == "__main__":
     # fetch dataset
-    wine_quality = fetch_ucirepo(id=186)
+    # dataset = fetch_ucirepo(id=186)
+    dataset = pandas.read_csv("../dataset/electricity/ex_1.csv")
 
     # data (as pandas dataframes)
-    X = wine_quality.data.features
-    y = wine_quality.data.targets
+    # X = dataset.data.features.to_numpy()
+    # y = dataset.data.targets.to_numpy()
+    X = dataset[['time', 'input_voltage']].to_numpy()
+    y = dataset['el_power'].to_numpy()
 
     # just some initial weights (better use random, but I didn't find the way)
-    weights_0 = np.ones_like(wine_quality.data.features[0])
+    weights_0 = np.ones_like(X[0])
+
+    a = lambda x, w: np.dot(x, w)
+    a_der = lambda x, w: w
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(lambda x, w: np.dot(x, w), lambda x, w: w), 0.1, 0.2),
-                     gr.get_stop_f_eps(0.1), gr.get_next_wolfe, 10)
+    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(a, a_der), 0.1, 0.2),
+                     gr.get_stop_x_eps(0.1), gr.get_next_wolfe, 10)
+    model.fit(X_train, y_train)
