@@ -22,13 +22,17 @@ class SGDLearn:
         self.batch = batch
 
     @profile
-    def fit(self, x, y, min_count=1, max_count=100):
+    def fit(self, x, y, min_count=1, max_count=100, moment=0.0):
         res = common.StateResult()
         if len(res.guesses) == 0:
             res.add_guess(self.weights)
 
         count = 0
+        vec=np.zeros_like(self.weights)
+
         while (not self.stop(res) or min_count > count) and max_count > count:
+            if count % 10 == 0:
+                print(count)
             if self.batch != 0:
                 ran = get_n_random(self.batch, len(x))
                 size = self.batch
@@ -60,7 +64,8 @@ class SGDLearn:
 
                 return ans
 
-            preres = self.get_next(res, optim_fun, optim_der, -grad, self.weights)
+            vec = moment * vec + (1 - moment) * grad
+            preres = self.get_next(res, optim_fun, optim_der, -vec, self.weights)
             res.count_of_function_calls += preres.count_call_func * size
             res.count_of_gradient_calls += preres.count_call_grad * size + size
             res.count_of_hessian_calls += preres.count_call_hess * size
@@ -180,7 +185,7 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(X_norm, y_norm, test_size=0.9, random_state=42)
     model = SGDLearn(weights_0, *regularize_elastic(*square_loss(a, a_der), 0.01, 0.01),
                      gr.get_stop_x_eps(0.001), gr.get_next_wolfe, 30)
-    res = model.fit(X_train, y_train, min_count=300, max_count=1000)
+    res = model.fit(X_train, y_train, min_count=300, max_count=1000, moment=0)
 
     average_train = 0
     for point, val in zip(X_train, y_train):
