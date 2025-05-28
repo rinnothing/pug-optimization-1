@@ -1,7 +1,9 @@
+from memory_profiler import profile
 import random
 
 import numpy as np
 import pandas
+import sklearn.preprocessing
 from sklearn.model_selection import train_test_split
 from ucimlrepo import fetch_ucirepo
 
@@ -19,6 +21,7 @@ class SGDLearn:
         self.weights = w_0
         self.batch = batch
 
+    @profile
     def fit(self, x, y, min_count=1, max_count=100):
         res = common.StateResult()
         if len(res.guesses) == 0:
@@ -58,9 +61,9 @@ class SGDLearn:
                 return ans
 
             preres = self.get_next(res, optim_fun, optim_der, -grad, self.weights)
-            res.count_of_function_calls += preres.count_call_func
-            res.count_of_gradient_calls += preres.count_call_grad
-            res.count_of_hessian_calls += preres.count_call_hess
+            res.count_of_function_calls += preres.count_call_func * size
+            res.count_of_gradient_calls += preres.count_call_grad * size + size
+            res.count_of_hessian_calls += preres.count_call_hess * size
 
             self.weights = preres.res
             res.add_guess(self.weights)
@@ -125,7 +128,6 @@ def square_loss(a, a_der):
         return np.square(a(x, weights) - y)
 
     def local_loss_der(weights, x, y):
-        print("x is", x, "y is", y, "weights are", weights)
         return 2 * (a(x, weights) - y) * a_der(x, weights)
 
     return local_loss_fun, local_loss_der
@@ -151,29 +153,34 @@ def sigmoid_loss(a, a_der):
 
     return local_loss_fun, local_loss_der
 
+def normalize(arr):
+    return np.divide(arr, np.max(arr))
+
+def denormalize(weights, x, y):
+    return np.multiply(weights, np.max(y) / np.max(x))
 
 if __name__ == "__main__":
-    # # # fetch dataset
-    # dataset = pandas.read_csv("../dataset/electricity/ex_1.csv")
-    # #
-    # # # data (as pandas dataframes)
-    # X = dataset[['time', 'input_voltage']].to_numpy()
-    # y = dataset['el_power'].to_numpy()
+    # # fetch dataset
+    dataset = pandas.read_csv("../dataset/electricity/ex_1.csv")
+    #
+    # # data (as pandas dataframes)
+    X = dataset[['time', 'input_voltage']].to_numpy()
+    y = dataset['el_power'].to_numpy()
 
-    X = [[x] for x in range(100, 200)]
-    y = [5 + 3 * x for x in range(100, 200)]
+    X_norm = normalize(X)
+    y_norm = normalize(y)
 
     # just some initial weights (better use random, but I didn't find the way)
-    weights_0 = np.ones(2)
+    weights_0 = np.ones(6)
 
     # trying to align using second order curve
-    a = lambda x, w: np.array([w[0] + x[0] * w[1]])
-    a_der = lambda x, w: np.array([1, x[0]])
+    a = lambda x, w: np.array([w[0] + x[0] * w[1] + x[0] ** 2 * w[2] + w[3] + x[1] * w[4] + x[1] ** 2 * w[5]])
+    a_der = lambda x, w: np.array([1, x[0], x[0] ** 2, 1, x[0], x[0] ** 2])
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
-    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(a, a_der), 0, 0),
-                     gr.get_stop_x_eps(0.1), gr.get_constant_step(0.0001), 1)
-    model.fit(X_train, y_train, min_count=500, max_count=1000)
+    X_train, X_test, y_train, y_test = train_test_split(X_norm, y_norm, test_size=0.9, random_state=42)
+    model = SGDLearn(weights_0, *regularize_elastic(*square_loss(a, a_der), 0.01, 0.01),
+                     gr.get_stop_x_eps(0.001), gr.get_next_wolfe, 30)
+    res = model.fit(X_train, y_train, min_count=300, max_count=1000)
 
     average_train = 0
     for point, val in zip(X_train, y_train):
@@ -187,4 +194,5 @@ if __name__ == "__main__":
     average_test /= len(X_test)
     print("average test deviation: %s" % average_test)
 
-    print("weights: ", model.weights)
+    print("weights:", model.weights)
+    print("number of iterations:", len(res.guesses))
