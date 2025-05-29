@@ -21,7 +21,7 @@ class SGDLearn:
         self.weights = w_0
         self.batch = batch
 
-    @profile
+    # @profile
     def fit(self, x, y, min_count=1, max_count=100, moment=0.0):
         res = common.StateResult()
         if len(res.guesses) == 0:
@@ -31,8 +31,6 @@ class SGDLearn:
         vec=np.zeros_like(self.weights)
 
         while (not self.stop(res) or min_count > count) and max_count > count:
-            if count % 10 == 0:
-                print(count)
             if self.batch != 0:
                 ran = get_n_random(self.batch, len(x))
                 size = self.batch
