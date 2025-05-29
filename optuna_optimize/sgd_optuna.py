@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 numb_func = 1
 test_func = datasets.func_dataset[numb_func]
 
-# Целевая функция для Optuna
 def objective(trial):
     weights_0 = np.ones(3)
 
@@ -35,10 +34,8 @@ def objective(trial):
     return abs(average_test * (result.count_of_function_calls + result.count_of_gradient_calls + result.count_of_hessian_calls))
 
 
-# Исследование
 study = optuna.create_study()
 study.optimize(objective, n_trials=100)
 
-# Результаты
 print("Лучшие параметры:", study.best_params)
 print("Лучшее значение функции:", study.best_value)

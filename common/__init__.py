@@ -32,6 +32,7 @@ class StateResult(OptimizeResult):
 
         self.success: bool = False
         self.guesses: list = []
+        self.new_guesses: list = []
         self.history: list = []
         self.count_of_function_calls: int = 0
         self.count_of_gradient_calls: int = 0
@@ -43,14 +44,14 @@ class StateResult(OptimizeResult):
     def add_history(self, val):
         self.history.append(val)
 
-    def add_function_call(self):
-        self.count_of_function_calls += 1
+    def add_function_call(self, count = 1):
+        self.count_of_function_calls += count
 
-    def add_gradient_call(self):
-        self.count_of_gradient_calls += 1
+    def add_gradient_call(self, count = 1):
+        self.count_of_gradient_calls += count
 
-    def add_hessian_call(self):
-        self.count_of_hessian_calls += 1
+    def add_hessian_call(self, count = 1):
+        self.count_of_hessian_calls += count
 
     def get_res(self):
         if not self.success or len(self.guesses) == 0:

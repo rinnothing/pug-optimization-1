@@ -44,23 +44,13 @@ def simulated_annealing(fun, start_point, get_next, temp, cooling_rate, min_temp
     return res
 
 
-# Генерация соседнего решения (случайное небольшое изменение)
 def get_next_in_sqrt(step_size=0.1):
     def fun(x):
         return np.array([x[0] + random.uniform(-step_size, step_size), x[1] + random.uniform(-step_size, step_size)])
     return fun
 
-# Пример использования
 if __name__ == "__main__":
-    # Параметры алгоритма
-    initial_solution = 10.0  # Начальная точка (например, x = 10)
-    initial_temp = 1000.0     # Начальная температура
-    cooling_rate = 0.95       # Скорость охлаждения
-    min_temp = 0.1            # Минимальная температура
-    max_iterations = 100      # Итераций на каждом шаге температуры
-
-    print("start")
-    for numb_fun in range(0, 2):
+    for numb_fun in range(0, 4):
         x = t_fun.functions_with_local_min_2d[numb_fun].lim[1] / 2
         y = x
         len_xy = t_fun.functions_with_local_min_2d[numb_fun].lim[1] - t_fun.functions_with_local_min_2d[numb_fun].lim[0]
