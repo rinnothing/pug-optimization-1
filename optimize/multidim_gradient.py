@@ -92,6 +92,42 @@ def visualiser_2d(state, lim_x, lim_y):
 
     plt.show()
 
+def visualiser_2d_gif(state, lim_x, lim_y, index):
+    X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
+    Z = state.function([X, Y])
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    contour = ax.contourf(X, Y, Z, levels=20, cmap='viridis', alpha=0.7)
+    plt.colorbar(contour, label='f(x, y)')
+
+    guesses = np.array(state.guesses)
+
+    line, = ax.plot([], [], 'r-', linewidth=2)
+    trail, = ax.plot([], [], 'ro', markersize=3)
+    point, = ax.plot([], [], 'ro', markersize=6)
+
+    ax.set_xlim(lim_x)
+    ax.set_ylim(lim_y)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+
+    def animate(i):
+        line.set_data(guesses[:i+1, 0], guesses[:i+1, 1])
+        trail.set_data(guesses[:i+1, 0], guesses[:i+1, 1])
+        point.set_data([guesses[i, 0]], [guesses[i, 1]])
+        return line, trail, point
+
+    ani = animation.FuncAnimation(
+        fig,
+        animate,
+        frames=len(guesses),
+        interval=200,
+        repeat=True
+    )
+    gif_path = f"visual_2d_gif{index}.gif"
+    ani.save(gif_path, writer='pillow', fps=5)
+    plt.show()
+
 def visualiser_2d_in(state, lim_x, lim_y, index=0):
     X, Y = np.meshgrid(np.linspace(lim_x[0], lim_x[1], 200), np.linspace(lim_y[0], lim_y[1], 200))
     Z = state.function([X, Y])
@@ -248,6 +284,7 @@ def visualiser_2d_2_on1(state1, state2, lim_x, lim_y, index):
         interval=200,
         repeat=True
     )
+
     if len(guesses1) > 0:
         line1.set_data(guesses1[:, 0], guesses1[:, 1])
         trail1.set_data(guesses1[:, 0], guesses1[:, 1])
