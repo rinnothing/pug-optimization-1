@@ -8,7 +8,6 @@ import optimize.gradient_descent as gr
 numb_func = 5
 test_func = functions.functions_with_one_min_2d[numb_func]
 
-# Целевая функция для Optuna
 def objective(trial):
 
     f_eps = trial.suggest_float("f_eps", 1e-9, 1e-8)
@@ -26,10 +25,8 @@ def objective(trial):
     return abs(test_func.function(result.get_res()) - test_func.function(test_func.point_min)) * (result.count_of_function_calls + result.count_of_gradient_calls + result.count_of_hessian_calls)
 
 
-# Исследование
 study = optuna.create_study()
 study.optimize(objective, n_trials=200)
 
-# Результаты
 print("Лучшие параметры:", study.best_params)
 print("Лучшее значение функции:", study.best_value)

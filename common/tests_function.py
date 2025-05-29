@@ -64,5 +64,7 @@ functions_with_local_min_2d: list = [
         25 * x[0]) / 30 + np.sin(
         32 * x[0]) / 16 + np.sin(18 * x[0] + 8) / 4 + np.cos(29 * x[1] - 5) / 13 + x[0] * np.sin(x[1]) + np.sin(
         32 * x[0]) / 16 + np.sin(0.5 * x[0]) * 10 + 20 * np.sin(0.1 * (x[1] ** 2 + x[0] ** 2) ** 0.5) + np.sin(
-        x[1] - 5) / (5 + x[0] ** 2)) ** 2, [-10, 10], [0,  0])
+        x[1] - 5) / (5 + x[0] ** 2)) ** 2, [-10, 10], [0,  0]),
+    test_function(lambda x: -np.cos(x[0]) * np.cos(x[1]) * np.exp(-(x[0] - np.pi)**2 - (x[1] - np.pi)**2), [-100, 100], [np.pi, np.pi]),
+    test_function(lambda x: np.sin(3 * np.pi * x[0]) ** 2 +(x[0] - 1) ** 2 * (1 + np.sin(3 * np.pi * x[1]) ** 2) + (x[1] - 1) ** 2 * (1 + np.sin(2 * np.pi * x[1]) ** 2), [-10, 10], [1, 1])
 ]
