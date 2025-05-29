@@ -21,7 +21,7 @@ class SGDLearn:
         self.weights = w_0
         self.batch = batch
 
-    # @profile
+    @profile
     def fit(self, x, y, min_count=1, max_count=100, moment=0.0):
         res = common.StateResult()
         if len(res.guesses) == 0:
