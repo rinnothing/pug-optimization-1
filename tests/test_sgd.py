@@ -4,7 +4,7 @@ import optimize.sgd as sgd
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-for f in common.datasets.func_dataset:
+for f in [common.datasets.func_dataset[0]]:
     weights_0 = np.ones(3)
 
     # trying to align using second order curve
@@ -12,9 +12,9 @@ for f in common.datasets.func_dataset:
     a_der = lambda x, w: np.array([1, x[0], x[0] ** 2])
 
     X_train, X_test, y_train, y_test = train_test_split(f.X, f.y, test_size=0.9, random_state=42)
-    model = sgd.SGDLearn(weights_0, *sgd.regularize_elastic(*sgd.square_loss(a, a_der), 0.01, 0.01),
+    model = sgd.SGDLearn(weights_0, *sgd.regularize_elastic(*sgd.square_loss(a, a_der), 0.007716671884570922, 0.0029403760996905256),
                          sgd.gr.get_stop_x_eps(0.001), sgd.gr.get_next_wolfe, 5)
-    res = model.fit(X_train, y_train, min_count=300, max_count=1000)
+    res = model.fit(X_train, y_train, min_count=131, max_count=1000)
 
     average_train = 0
     for point, val in zip(X_train, y_train):

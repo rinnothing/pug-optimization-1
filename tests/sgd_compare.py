@@ -5,9 +5,9 @@ import optimize.gradient_descent as gr
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-print("type\t batch\t l_1\t l_2\t moment\t deviation\t iter\t calls\t grad")
+print("batch", "l_1","l_2", "moment", "deviation", "iter", "calls", "grad", sep=" & ", end=" \\\\ \\hline\n")
 
-def launch(func, name, batch_size, l_1, l_2, moment):
+def launch(func, batch_size, l_1, l_2, moment):
     f = common.datasets.func_dataset[func]
     weights_0 = np.ones(3)
 
@@ -25,22 +25,20 @@ def launch(func, name, batch_size, l_1, l_2, moment):
         average_test += (a(point, model.weights) - val) ** 2
     average_test /= len(X_test)
 
-    print(name, batch_size, l_1, l_2, moment, average_test[0], len(res.guesses),
-          res.count_of_function_calls, res.count_of_gradient_calls, sep="\t")
+    print(batch_size, l_1, l_2, moment, average_test[0], len(res.guesses),
+          res.count_of_function_calls, res.count_of_gradient_calls, sep=" & ", end=" \\\\ \\hline\n")
 
-test_list = [
-    [1, 0.01, 0.01, 0.1],
-    [1, 0.5, 0.01, 0.1],
-    [1, 0.01, 0.01, 0.5],
-    [5, 0.01, 0.01, 0.1],
-    [5, 0.5, 0.01, 0.1],
-    [5, 0.01, 0.01, 0.5],
-    [10, 0.01, 0.01, 0.1],
-    [10, 0.5, 0.01, 0.1],
-    [10, 0.01, 0.01, 0.5],
-]
+moment_list = [0, 0.1, 0.5]
+
+batch_list = [1, 5, 50]
+
+l_1_list = [0.01, 0.5]
+
+l_2_list = [0.01, 0.5]
 
 func = 1
-for vals in test_list:
-    launch(func, "sgd", *vals[:-1], moment=0)
-    launch(func, "moment", *vals)
+for batch in batch_list:
+    for l_1 in l_1_list:
+        for l_2 in l_2_list:
+            for moment in moment_list:
+                launch(func, batch, l_1, l_2, moment)
